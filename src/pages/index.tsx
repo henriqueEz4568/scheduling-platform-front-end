@@ -1,44 +1,80 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Eye, EyeOff, Calendar, User, Lock } from "lucide-react"
-import Link from "next/link"
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Eye, EyeOff, Calendar, User, Lock } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { api } from "./api";
+import { useRouter } from "next/router";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
-  const [captchaCompleted, setCaptchaCompleted] = useState(false)
-  const [error, setError] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-
-  const isFormValid = email.includes("@") && password.length >= 6 && captchaCompleted
-
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [captchaCompleted, setCaptchaCompleted] = useState(false);
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  const isFormValid =
+    email.includes("@") && password.length >= 6 && captchaCompleted;
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    value: string
+  ) => {
+    switch (e.target.name) {
+      case "email":
+        setEmail(value);
+        break;
+      case "password":
+        setPassword(value);
+        break;
+      default:
+        break;
+    }
+  };
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!isFormValid) return
+    e.preventDefault();
+    if (!isFormValid) return;
 
-    setIsLoading(true)
-    setError("")
+    setIsLoading(true);
+    setError("");
 
-    // Simulate login process
+    try {
+      const res = await api.post("/auth/login", { email, password });
+      if (res.data.success) {
+        alert("Login successful!");
+        router.push("/dashboard");
+      } else {
+        alert("Login failed: " + res.data.message);
+        setError(res.data.message || "Login failed. Please try again.");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      setError("An unexpected error occurred. Please try again later.");
+      setIsLoading(false);
+      return;
+    }
     setTimeout(() => {
       if (email === "demo@example.com" && password === "password") {
         // Redirect to dashboard
-        window.location.href = "/dashboard"
+        window.location.href = "/dashboard";
       } else {
-        setError("Invalid email or password. Please try again.")
+        setError("Invalid email or password. Please try again.");
       }
-      setIsLoading(false)
-    }, 1500)
-  }
+      setIsLoading(false);
+    }, 1500);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center p-4">
@@ -50,24 +86,32 @@ export default function LoginPage() {
               <Calendar className="h-8 w-8 text-primary-foreground" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">SchedulePro</h1>
-          <p className="text-muted-foreground">Intelligent Scheduling Platform</p>
+          <h1 className="text-3xl font-bold text-foreground mb-2">
+            SchedulePro
+          </h1>
+          <p className="text-muted-foreground">
+            Intelligent Scheduling Platform
+          </p>
         </div>
 
         {/* Login Form */}
         <Card className="shadow-lg border-0 bg-card/95 backdrop-blur">
           <CardHeader className="space-y-1 text-center">
-            <CardTitle className="text-2xl font-semibold">Welcome back</CardTitle>
-            <CardDescription>Sign in to your account to continue</CardDescription>
+            <CardTitle className="text-2xl font-semibold">
+              Welcome back
+            </CardTitle>
+            <CardDescription>
+              Sign in to your account to continue
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
               {/* Error Message */}
-              {error && (
+              {/* {error && (
                 <Alert variant="destructive">
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
-              )}
+              )} */}
 
               {/* Email Field */}
               <div className="space-y-2">
@@ -109,14 +153,21 @@ export default function LoginPage() {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
                   </button>
                 </div>
               </div>
 
               {/* Forgot Password Link */}
               <div className="text-right">
-                <Link href="/forgot-password" className="text-sm text-accent hover:text-accent/80 transition-colors">
+                <Link
+                  href="/forgot-password"
+                  className="text-sm text-accent hover:text-accent/80 transition-colors"
+                >
                   Forgot password?
                 </Link>
               </div>
@@ -131,15 +182,24 @@ export default function LoginPage() {
                     onChange={(e) => setCaptchaCompleted(e.target.checked)}
                     className="h-4 w-4 text-accent focus:ring-accent border-border rounded"
                   />
-                  <label htmlFor="captcha" className="text-sm text-muted-foreground">
+                  <label
+                    htmlFor="captcha"
+                    className="text-sm text-muted-foreground"
+                  >
                     Im not a robot
                   </label>
-                  <div className="ml-auto text-xs text-muted-foreground">reCAPTCHA</div>
+                  <div className="ml-auto text-xs text-muted-foreground">
+                    reCAPTCHA
+                  </div>
                 </div>
               </div>
 
               {/* Login Button */}
-              <Button type="submit" className="w-full h-12 text-base font-medium" disabled={!isFormValid || isLoading}>
+              <Button
+                type="submit"
+                className="w-full h-12 text-base font-medium"
+                disabled={!isFormValid || isLoading}
+              >
                 {isLoading ? "Signing in..." : "Sign in"}
               </Button>
             </form>
@@ -147,8 +207,11 @@ export default function LoginPage() {
             {/* Register Link */}
             <div className="mt-6 text-center">
               <p className="text-sm text-muted-foreground">
-                Don't have an account?{" "}
-                <Link href="/register" className="text-accent hover:text-accent/80 font-medium transition-colors">
+                Dont have an account?{" "}
+                <Link
+                  href="/register"
+                  className="text-accent hover:text-accent/80 font-medium transition-colors"
+                >
                   Register an account
                 </Link>
               </p>
@@ -156,11 +219,13 @@ export default function LoginPage() {
 
             {/* Demo Credentials */}
             <div className="mt-4 p-3 bg-muted/50 rounded-lg">
-              <p className="text-xs text-muted-foreground text-center">Demo: demo@example.com / password</p>
+              <p className="text-xs text-muted-foreground text-center">
+                Demo: demo@example.com / password
+              </p>
             </div>
           </CardContent>
         </Card>
       </div>
     </div>
-  )
+  );
 }
