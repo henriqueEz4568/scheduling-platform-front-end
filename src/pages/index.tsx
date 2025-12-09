@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-
+import { SubmitHandler, useForm } from "react-hook-form";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,46 +17,31 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { api } from "./api";
 import { useRouter } from "next/router";
-
+import Cookies from "js-cookie";
+import { FormFields } from "@/lib/schemas/login";
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  //const [email, setEmail] = useState("");
+  //const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [captchaCompleted, setCaptchaCompleted] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const isFormValid =
-    email.includes("@") && password.length >= 6 && captchaCompleted;
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    value: string
-  ) => {
-    switch (e.target.name) {
-      case "email":
-        setEmail(value);
-        break;
-      case "password":
-        setPassword(value);
-        break;
-      default:
-        break;
-    }
-  };
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!isFormValid) return;
-
-    setIsLoading(true);
-    setError("");
-
+  const { register, handleSubmit, formState } = useForm<FormFields>();
+  const onSubmit: SubmitHandler<FormFields> = async (data) => {
+    console.log(data);
+    const { email, password } = data;
     try {
       const res = await api.post("/auth/login", { email, password });
-      if (res.data.success) {
+      if (res.data.success === true) {
         alert("Login successful!");
+        Cookies.set("token", res.data.token, { expires: 7 });
         router.push("/dashboard");
       } else {
-        alert("Login failed: " + res.data.message);
+        alert(
+          "Login failed: " + res.data?.message
+            ? res.data?.message
+            : "unknow error"
+        );
         setError(res.data.message || "Login failed. Please try again.");
       }
     } catch (error) {
@@ -65,16 +50,32 @@ export default function LoginPage() {
       setIsLoading(false);
       return;
     }
-    setTimeout(() => {
-      if (email === "demo@example.com" && password === "password") {
-        // Redirect to dashboard
-        window.location.href = "/dashboard";
-      } else {
-        setError("Invalid email or password. Please try again.");
-      }
-      setIsLoading(false);
-    }, 1500);
   };
+  // const handleLogin = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   setIsLoading(true);
+  //   setError("");
+  //   try {
+  //     const res = await api.post("/auth/login", { email, password });
+  //     if (res.data.success === true) {
+  //       alert("Login successful!");
+  //       Cookies.set("token", res.data.token, { expires: 7 });
+  //       router.push("/dashboard");
+  //     } else {
+  //       alert(
+  //         "Login failed: " + res.data?.message
+  //           ? res.data?.message
+  //           : "unknow error"
+  //       );
+  //       setError(res.data.message || "Login failed. Please try again.");
+  //     }
+  //   } catch (error) {
+  //     console.error("Login error:", error);
+  //     setError("An unexpected error occurred. Please try again later.");
+  //     setIsLoading(false);
+  //     return;
+  //   }
+  // };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center p-4">
@@ -105,7 +106,7 @@ export default function LoginPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               {/* Error Message */}
               {/* {error && (
                 <Alert variant="destructive">
@@ -115,20 +116,25 @@ export default function LoginPage() {
 
               {/* Email Field */}
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium">
-                  Email address
-                </Label>
+                <Label htmlFor="email">Email address</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
+                    {...register("email", {
+                      required: "Email is required",
+                      validate: (value) =>
+                        value.includes("@") || "Email must contain @",
+                    })}
                     id="email"
-                    type="email"
+                    //  type="email"
                     placeholder="Enter your email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
                     className="pl-10 h-12"
-                    required
                   />
+                  {formState.errors.email && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {formState.errors.email.message}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -140,14 +146,24 @@ export default function LoginPage() {
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
+                    {...register("password", {
+                      required: "Password is required",
+                      minLength: {
+                        value: 5,
+                        message: "Password must be at least 5 characters",
+                      },
+                    })}
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
                     className="pl-10 pr-10 h-12"
-                    required
                   />
+
+                  {formState.errors.password && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {formState.errors.password.message}
+                    </p>
+                  )}
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
@@ -172,33 +188,11 @@ export default function LoginPage() {
                 </Link>
               </div>
 
-              {/* reCAPTCHA Simulation */}
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2 p-4 border rounded-lg bg-muted/50">
-                  <input
-                    type="checkbox"
-                    id="captcha"
-                    checked={captchaCompleted}
-                    onChange={(e) => setCaptchaCompleted(e.target.checked)}
-                    className="h-4 w-4 text-accent focus:ring-accent border-border rounded"
-                  />
-                  <label
-                    htmlFor="captcha"
-                    className="text-sm text-muted-foreground"
-                  >
-                    Im not a robot
-                  </label>
-                  <div className="ml-auto text-xs text-muted-foreground">
-                    reCAPTCHA
-                  </div>
-                </div>
-              </div>
-
               {/* Login Button */}
               <Button
                 type="submit"
                 className="w-full h-12 text-base font-medium"
-                disabled={!isFormValid || isLoading}
+                disabled={isLoading}
               >
                 {isLoading ? "Signing in..." : "Sign in"}
               </Button>
@@ -218,11 +212,6 @@ export default function LoginPage() {
             </div>
 
             {/* Demo Credentials */}
-            <div className="mt-4 p-3 bg-muted/50 rounded-lg">
-              <p className="text-xs text-muted-foreground text-center">
-                Demo: demo@example.com / password
-              </p>
-            </div>
           </CardContent>
         </Card>
       </div>
