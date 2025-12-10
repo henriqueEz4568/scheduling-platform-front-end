@@ -15,68 +15,49 @@ import {
 import { Eye, EyeOff, Calendar, User, Lock } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { api } from "./api";
 import { useRouter } from "next/router";
-import Cookies from "js-cookie";
-import { FormFields } from "@/lib/schemas/login";
+import { FormFields, loginSchema } from "@/lib/schemas/login";
+import { zodResolver } from "@hookform/resolvers/zod";
 export default function LoginPage() {
-  //const [email, setEmail] = useState("");
-  //const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const { register, handleSubmit, formState } = useForm<FormFields>();
+  const { register, handleSubmit, formState, setError } = useForm<FormFields>({
+    defaultValues: {},
+    resolver: zodResolver(loginSchema),
+  });
   const onSubmit: SubmitHandler<FormFields> = async (data) => {
     console.log(data);
+    await new Promise((resolve) => setTimeout(resolve, 2000));
     const { email, password } = data;
     try {
-      const res = await api.post("/auth/login", { email, password });
-      if (res.data.success === true) {
-        alert("Login successful!");
-        Cookies.set("token", res.data.token, { expires: 7 });
+      const res = await fetch("/api/login", {
+        method: "POST",
+        body: JSON.stringify({ email, password }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      const data = await res.json();
+      if (data.success === true) {
+        alert("Login successfull");
         router.push("/dashboard");
       } else {
-        alert(
-          "Login failed: " + res.data?.message
-            ? res.data?.message
-            : "unknow error"
-        );
-        setError(res.data.message || "Login failed. Please try again.");
+        const errorMessage = data?.message ?? "Internal Server Error";
+        setError("password", {
+          message: errorMessage,
+        });
       }
-    } catch (error) {
-      console.error("Login error:", error);
-      setError("An unexpected error occurred. Please try again later.");
-      setIsLoading(false);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      const message = error?.message ? error?.message : "Internal Server Error";
+      console.error("Login error:", message);
+      setError("root", {
+        message,
+      });
+
       return;
     }
   };
-  // const handleLogin = async (e: React.FormEvent) => {
-  //   e.preventDefault();
-  //   setIsLoading(true);
-  //   setError("");
-  //   try {
-  //     const res = await api.post("/auth/login", { email, password });
-  //     if (res.data.success === true) {
-  //       alert("Login successful!");
-  //       Cookies.set("token", res.data.token, { expires: 7 });
-  //       router.push("/dashboard");
-  //     } else {
-  //       alert(
-  //         "Login failed: " + res.data?.message
-  //           ? res.data?.message
-  //           : "unknow error"
-  //       );
-  //       setError(res.data.message || "Login failed. Please try again.");
-  //     }
-  //   } catch (error) {
-  //     console.error("Login error:", error);
-  //     setError("An unexpected error occurred. Please try again later.");
-  //     setIsLoading(false);
-  //     return;
-  //   }
-  // };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -122,8 +103,6 @@ export default function LoginPage() {
                   <Input
                     {...register("email", {
                       required: "Email is required",
-                      validate: (value) =>
-                        value.includes("@") || "Email must contain @",
                     })}
                     id="email"
                     //  type="email"
@@ -148,10 +127,6 @@ export default function LoginPage() {
                   <Input
                     {...register("password", {
                       required: "Password is required",
-                      minLength: {
-                        value: 5,
-                        message: "Password must be at least 5 characters",
-                      },
                     })}
                     id="password"
                     type={showPassword ? "text" : "password"}
@@ -178,7 +153,7 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              {/* Forgot Password Link */}
+              {/* Forgot Password Link
               <div className="text-right">
                 <Link
                   href="/forgot-password"
@@ -186,16 +161,21 @@ export default function LoginPage() {
                 >
                   Forgot password?
                 </Link>
-              </div>
+              </div> */}
 
               {/* Login Button */}
               <Button
                 type="submit"
                 className="w-full h-12 text-base font-medium"
-                disabled={isLoading}
+                disabled={formState?.isSubmitting}
               >
-                {isLoading ? "Signing in..." : "Sign in"}
+                {formState?.isSubmitting ? "Signing in..." : "Sign in"}
               </Button>
+              {formState.errors?.root?.message && (
+                <p className="text-red-500 text-sm mt-1">
+                  {formState.errors.root.message}
+                </p>
+              )}
             </form>
 
             {/* Register Link */}
