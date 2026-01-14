@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { io, Socket } from "socket.io-client";
+import { io } from "socket.io-client";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -123,10 +123,9 @@ const upcomingAppointments = [
 
 export default function DashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [messages, setMessages] = useState<any[]>([]);
+  const [messages, setMessages] = useState<Record<string, unknown>[]>([]);
   const token = Cookies.get("token");
   const userId = "123"; // Substitua pelo ID do usuário real do login
-  const [socket, setSocket] = useState<Socket | null>(null);
 
   useEffect(() => {
     const s = io(`${process.env.NEXT_PUBLIC_API_URL}`, {
@@ -135,10 +134,8 @@ export default function DashboardPage() {
       },
     });
 
-    setSocket(s);
-
     s.on("ping", (data) => {
-      setMessages((prev) => [data, ...prev]);
+      setMessages((prev) => [data as Record<string, unknown>, ...prev]);
       console.log("Mensagem recebida:", data);
     });
 
@@ -303,9 +300,11 @@ export default function DashboardPage() {
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-4 mb-4">
-                  <Button className="flex items-center space-x-2">
-                    <Plus className="h-4 w-4" />
-                    <span>New Appointment</span>
+                  <Button className="flex items-center space-x-2" asChild>
+                    <Link href="/dashboard/new-appointment">
+                      <Plus className="h-4 w-4" />
+                      <span>New Appointment</span>
+                    </Link>
                   </Button>
                   <Button
                     variant="outline"
