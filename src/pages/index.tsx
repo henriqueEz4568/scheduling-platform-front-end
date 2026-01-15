@@ -26,8 +26,6 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
   });
   const onSubmit: SubmitHandler<FormFields> = async (data) => {
-    console.log(data);
-    await new Promise((resolve) => setTimeout(resolve, 2000));
     const { email, password } = data;
     try {
       const res = await fetch("/api/login", {
