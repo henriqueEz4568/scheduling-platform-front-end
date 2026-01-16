@@ -36,6 +36,7 @@ import {
   User,
   LogOut,
   Menu,
+  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -304,6 +305,16 @@ export default function DashboardPage() {
                     <Link href="/dashboard/new-appointment">
                       <Plus className="h-4 w-4" />
                       <span>New Appointment</span>
+                    </Link>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex items-center space-x-2 bg-transparent"
+                    asChild
+                  >
+                    <Link href="/dashboard/new-service">
+                      <Sparkles className="h-4 w-4" />
+                      <span>New Service</span>
                     </Link>
                   </Button>
                   <Button

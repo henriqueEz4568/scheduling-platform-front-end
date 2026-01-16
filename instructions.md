@@ -17,3 +17,12 @@ O objetivo é:
 Todos os tipos devem ficar **centralizados na pasta `types/`**.
 
 ---
+## 🌐 Regra obrigatória para chamadas de API
+
+### 1️⃣ Arquivos `.tsx` (pages e components)
+
+❗ **Toda chamada de API em arquivos `.tsx` deve usar exclusivamente:**
+
+```ts
+fetch('/api/...')
+que esse fetch vai chamar pages/api que la vai usar a instancia do axios, siga o padrão 
