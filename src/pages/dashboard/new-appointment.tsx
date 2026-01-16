@@ -1,9 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
-import Cookies from "js-cookie";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,68 +16,23 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CustomerSelect } from "@/components/customer-select";
-
-type Customer = {
-  id: string | number;
-  name: string;
-  email: string;
-  phone: string;
-};
-
-const mockCustomers: Customer[] = [
-  {
-    id: 1,
-    name: "Maria Oliveira",
-    email: "maria.oliveira@example.com",
-    phone: "+55 11 95555-0000",
-  },
-  {
-    id: 2,
-    name: "João Silva",
-    email: "joao.silva@example.com",
-    phone: "+55 11 97777-0000",
-  },
-  {
-    id: 3,
-    name: "Carla Souza",
-    email: "carla.souza@example.com",
-    phone: "+55 11 91111-0000",
-  },
-  {
-    id: 4,
-    name: "Felipe Santos",
-    email: "felipe.santos@example.com",
-    phone: "+55 11 93333-0000",
-  },
-  {
-    id: 5,
-    name: "Ana Paula",
-    email: "ana.paula@example.com",
-    phone: "+55 11 92222-0000",
-  },
-];
-
-type ScheduleFormValues = {
-  start: string;
-  end: string;
-  serviceId: string;
-  existingCustomerId: string;
-  customerName: string;
-  customerEmail: string;
-  customerPhone: string;
-};
+import type {
+  Customer,
+  ScheduleFormValues,
+  Service,
+} from "@/types/appointments";
 
 export default function NewAppointmentPage() {
   const router = useRouter();
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL;
-  const token = Cookies.get("token") || "";
-  const customers = mockCustomers;
-  const [customerMode, setCustomerMode] = useState<"existing" | "new">(
-    customers.length ? "existing" : "new"
-  );
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
+  const [customerMode, setCustomerMode] = useState<"existing" | "new">("new");
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
-  const defaultCustomerId = customers.length ? String(customers[0].id) : "";
+  const [customersLoading, setCustomersLoading] = useState(true);
+  const [servicesLoading, setServicesLoading] = useState(true);
+  const [customersError, setCustomersError] = useState<string | null>(null);
+  const [servicesError, setServicesError] = useState<string | null>(null);
 
   const {
     register,
@@ -92,7 +46,7 @@ export default function NewAppointmentPage() {
       start: "",
       end: "",
       serviceId: "",
-      existingCustomerId: defaultCustomerId,
+      existingCustomerId: "",
       customerName: "",
       customerEmail: "",
       customerPhone: "",
@@ -100,6 +54,15 @@ export default function NewAppointmentPage() {
   });
 
   const selectedCustomerId = watch("existingCustomerId");
+  const selectedServiceId = watch("serviceId");
+  const currencyFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+      }),
+    []
+  );
 
   const selectedCustomer = useMemo(() => {
     return customers.find(
@@ -107,12 +70,120 @@ export default function NewAppointmentPage() {
     );
   }, [customers, selectedCustomerId]);
 
-  const onSubmit = async (values: ScheduleFormValues) => {
-    if (!apiBaseUrl) {
-      setSubmitError("API URL is not configured.");
-      return;
+  const readApiJson = async <T,>(response: Response) => {
+    try {
+      return (await response.json()) as T;
+    } catch {
+      return {} as T;
+    }
+  };
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const loadCustomers = async () => {
+      setCustomersLoading(true);
+      setCustomersError(null);
+      try {
+        const response = await fetch("/api/customers", {
+          signal: controller.signal,
+        });
+        const data = await readApiJson<{ customers?: Customer[]; message?: string }>(
+          response
+        );
+
+        if (!response.ok) {
+          throw new Error(data?.message ?? "Unable to load customers.");
+        }
+
+        setCustomers(data?.customers ?? []);
+      } catch (error) {
+        if (controller.signal.aborted) {
+          return;
+        }
+        console.error("Error loading customers", error);
+        setCustomers([]);
+        const message =
+          error instanceof Error ? error.message : "Unable to load customers.";
+        setCustomersError(message);
+      } finally {
+        if (!controller.signal.aborted) {
+          setCustomersLoading(false);
+        }
+      }
+    };
+
+    loadCustomers();
+
+    return () => {
+      controller.abort();
+    };
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const loadServices = async () => {
+      setServicesLoading(true);
+      setServicesError(null);
+      try {
+        const response = await fetch("/api/services", {
+          signal: controller.signal,
+        });
+        const data = await readApiJson<{ services?: Service[]; message?: string }>(
+          response
+        );
+
+        if (!response.ok) {
+          throw new Error(data?.message ?? "Unable to load services.");
+        }
+
+        setServices(data?.services ?? []);
+      } catch (error) {
+        if (controller.signal.aborted) {
+          return;
+        }
+        console.error("Error loading services", error);
+        setServices([]);
+        const message =
+          error instanceof Error ? error.message : "Unable to load services.";
+        setServicesError(message);
+      } finally {
+        if (!controller.signal.aborted) {
+          setServicesLoading(false);
+        }
+      }
+    };
+
+    loadServices();
+
+    return () => {
+      controller.abort();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (customers.length && !selectedCustomerId) {
+      setValue("existingCustomerId", String(customers[0].id));
+      setCustomerMode("existing");
     }
 
+    if (!customers.length) {
+      setValue("existingCustomerId", "");
+      setCustomerMode("new");
+    }
+  }, [customers, selectedCustomerId, setValue]);
+
+  useEffect(() => {
+    if (services.length && !selectedServiceId) {
+      setValue("serviceId", String(services[0].dbId));
+    }
+    if (!services.length && selectedServiceId) {
+      setValue("serviceId", "");
+    }
+  }, [services, selectedServiceId, setValue]);
+
+  const onSubmit = async (values: ScheduleFormValues) => {
     const startDate = new Date(values.start);
     const endDate = new Date(values.end);
 
@@ -122,71 +193,74 @@ export default function NewAppointmentPage() {
     }
 
     if (!values.serviceId) {
-      setSubmitError("Please provide a service ID.");
+      setSubmitError("Please select a service.");
       return;
     }
 
-    let customerPayload: Customer | undefined = undefined;
+    const bookingPayload: Record<string, unknown> = {
+      start: startDate.toISOString(),
+      end: endDate.toISOString(),
+      serviceId: Number(values.serviceId),
+    };
 
     if (customerMode === "existing") {
       if (!selectedCustomer) {
         setSubmitError("Please pick a customer.");
         return;
       }
-      customerPayload = selectedCustomer;
+      bookingPayload.customerId = String(selectedCustomer.id);
     } else {
-      if (!values.customerName || !values.customerEmail || !values.customerPhone) {
-        setSubmitError("Please fill in name, email, and phone for the customer.");
+      if (
+        !values.customerName ||
+        !values.customerEmail ||
+        !values.customerPhone
+      ) {
+        setSubmitError(
+          "Please fill in name, email, and phone for the customer."
+        );
         return;
       }
 
-      customerPayload = {
-        id: "",
+      bookingPayload.customer = {
         name: values.customerName,
         email: values.customerEmail,
         phone: values.customerPhone,
       };
     }
 
-    const body = {
-      start: startDate.toISOString(),
-      end: endDate.toISOString(),
-      serviceId: Number(values.serviceId),
-      customer: {
-        name: customerPayload?.name,
-        email: customerPayload?.email,
-        phone: customerPayload?.phone,
-      },
-    };
-
     setSubmitError(null);
     setSubmitSuccess(null);
 
     try {
-      const response = await fetch(`${apiBaseUrl}/schedules`, {
+      const response = await fetch("/api/bookings", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify(body),
+        body: JSON.stringify(bookingPayload),
       });
 
+      const data = await readApiJson<{ message?: string }>(response);
       if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.message || "Unable to create schedule.");
+        throw new Error(data?.message ?? "Unable to create schedule.");
       }
 
       setSubmitSuccess("Schedule created successfully.");
       reset();
-      setValue("existingCustomerId", defaultCustomerId);
+      setValue(
+        "existingCustomerId",
+        customers.length ? String(customers[0].id) : ""
+      );
+      setValue("serviceId", services.length ? String(services[0].dbId) : "");
 
       setTimeout(() => {
         router.push("/dashboard");
       }, 1000);
     } catch (error) {
       console.error("Error creating schedule", error);
-      setSubmitError((error as Error).message);
+      setSubmitError(
+        error instanceof Error ? error.message : "Unable to create schedule."
+      );
     }
   };
 
@@ -237,14 +311,28 @@ export default function NewAppointmentPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="serviceId">Service ID</Label>
-                <Input
+                <Label htmlFor="serviceId">Service</Label>
+                <select
                   id="serviceId"
-                  type="number"
-                  min={1}
-                  placeholder="Enter the service ID"
+                  className="border-input flex h-9 w-full min-w-0 rounded-md border bg-background px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 md:text-sm"
+                  aria-invalid={!selectedServiceId}
+                  disabled={servicesLoading || !services.length}
                   {...register("serviceId", { required: true })}
-                />
+                >
+                  {!services.length && (
+                    <option value="">
+                      {servicesLoading ? "Loading services..." : "No services available"}
+                    </option>
+                  )}
+                  {services.map((service) => (
+                    <option key={service.id} value={service.dbId}>
+                      {service.name} - {currencyFormatter.format(service.price)}
+                    </option>
+                  ))}
+                </select>
+                {servicesError && (
+                  <p className="text-sm text-destructive">{servicesError}</p>
+                )}
               </div>
 
               <div className="space-y-4">
@@ -256,7 +344,7 @@ export default function NewAppointmentPage() {
                     type="button"
                     variant={customerMode === "existing" ? "default" : "outline"}
                     onClick={() => setCustomerMode("existing")}
-                    disabled={!customers.length}
+                    disabled={!customers.length || customersLoading}
                   >
                     Select existing
                   </Button>
@@ -282,6 +370,7 @@ export default function NewAppointmentPage() {
                     <CustomerSelect
                       customers={customers}
                       value={selectedCustomerId}
+                      loading={customersLoading}
                       onChange={(customer) =>
                         setValue(
                           "existingCustomerId",
@@ -290,6 +379,9 @@ export default function NewAppointmentPage() {
                         )
                       }
                     />
+                    {customersError && (
+                      <p className="text-sm text-destructive">{customersError}</p>
+                    )}
                   </div>
                 )}
 
