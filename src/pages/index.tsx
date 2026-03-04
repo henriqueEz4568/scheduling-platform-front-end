@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/router";
 import { FormFields, loginSchema } from "@/lib/schemas/login";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { LoginApiResponse } from "@/types/auth";
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
@@ -35,9 +36,15 @@ export default function LoginPage() {
           "Content-Type": "application/json",
         },
       });
-      const data = await res.json();
+      const data: LoginApiResponse = await res.json();
       if (data.success === true) {
-        alert("Login successfull");
+        if (typeof window !== "undefined") {
+          if (data.user) {
+            localStorage.setItem("auth_user", JSON.stringify(data.user));
+          } else {
+            localStorage.removeItem("auth_user");
+          }
+        }
         router.push("/dashboard");
       } else {
         const errorMessage = data?.message ?? "Internal Server Error";
@@ -178,15 +185,12 @@ export default function LoginPage() {
 
             {/* Register Link */}
             <div className="mt-6 text-center">
-              <p className="text-sm text-muted-foreground">
-                Dont have an account?{" "}
-                <Link
-                  href="/register"
-                  className="text-accent hover:text-accent/80 font-medium transition-colors"
-                >
-                  Register an account
-                </Link>
-              </p>
+              <Link
+                href="/register"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Don&apos;t have an account?
+              </Link>
             </div>
 
             {/* Demo Credentials */}

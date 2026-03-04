@@ -39,6 +39,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import Link from "next/link";
+import { AuthUser } from "@/types/user";
 
 // Mock data
 const todaysSchedule = [
@@ -125,8 +126,26 @@ const upcomingAppointments = [
 export default function DashboardPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [messages, setMessages] = useState<Record<string, unknown>[]>([]);
+  const [authUser, setAuthUser] = useState<AuthUser | null>(null);
   const token = Cookies.get("token");
-  const userId = "123"; // Substitua pelo ID do usuário real do login
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const persistedUser = localStorage.getItem("auth_user");
+    if (!persistedUser) {
+      setAuthUser(null);
+      return;
+    }
+
+    try {
+      setAuthUser(JSON.parse(persistedUser) as AuthUser);
+    } catch {
+      setAuthUser(null);
+    }
+  }, []);
 
   useEffect(() => {
     const s = io(`${process.env.NEXT_PUBLIC_API_URL}`, {
@@ -143,7 +162,16 @@ export default function DashboardPage() {
     return () => {
       s.disconnect();
     };
-  }, [userId, token]);
+  }, [token]);
+
+  const displayName = authUser?.name?.trim() || "Usuario";
+  const displayEmail = authUser?.email || "sem-email";
+  const avatarFallback = displayName
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((namePart) => namePart[0]?.toUpperCase() ?? "")
+    .join("");
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -212,16 +240,18 @@ export default function DashboardPage() {
                       src="/placeholder.svg?height=32&width=32"
                       alt="User"
                     />
-                    <AvatarFallback>JD</AvatarFallback>
+                    <AvatarFallback>{avatarFallback || "U"}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">John Doe</p>
+                    <p className="text-sm font-medium leading-none">
+                      {displayName}
+                    </p>
                     <p className="text-xs leading-none text-muted-foreground">
-                      john@schedulepro.com
+                      {displayEmail}
                     </p>
                   </div>
                 </DropdownMenuLabel>
@@ -235,7 +265,14 @@ export default function DashboardPage() {
                   <span>Settings</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => (window.location.href = "/")}>
+                <DropdownMenuItem
+                  onClick={() => {
+                    if (typeof window !== "undefined") {
+                      localStorage.removeItem("auth_user");
+                    }
+                    window.location.href = "/";
+                  }}
+                >
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Log out</span>
                 </DropdownMenuItem>
@@ -284,7 +321,7 @@ export default function DashboardPage() {
             {/* Welcome Header */}
             <div>
               <h2 className="text-3xl font-bold text-foreground">
-                Welcome back, John!
+                Welcome back, {displayName}!
               </h2>
               <p className="text-muted-foreground">
                 Heres whats happening with your schedule today.

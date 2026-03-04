@@ -2,6 +2,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { serialize } from "cookie";
 import { api } from "../api";
+import { AuthUser } from "@/types/user";
 
 const ONE_WEEK = 60 * 60 * 24 * 7;
 
@@ -26,6 +27,8 @@ export default async function handler(
       });
     }
 
+    const user: AuthUser | null = data?.user ?? null;
+
     res.setHeader(
       "Set-Cookie",
       serialize("token", data.token, {
@@ -37,7 +40,11 @@ export default async function handler(
       })
     );
 
-    return res.status(200).json({ success: true, message: "Login OK" });
+    return res.status(200).json({
+      success: true,
+      message: "Login OK",
+      user,
+    });
   } catch (err: any) {
     console.error("API /login error:", err);
     return res.status(500).json({
