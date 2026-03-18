@@ -16,7 +16,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CustomerSelect } from "@/components/customer-select";
+import { AppointmentSummary } from "@/components/appointment-summary";
 import type {
+  CreatedAppointment,
   Customer,
   ScheduleFormValues,
   Service,
@@ -28,30 +30,25 @@ export default function NewAppointmentPage() {
   const [services, setServices] = useState<Service[]>([]);
   const [customerMode, setCustomerMode] = useState<"existing" | "new">("new");
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
+  const [createdAppointment, setCreatedAppointment] =
+    useState<CreatedAppointment | null>(null);
   const [customersLoading, setCustomersLoading] = useState(true);
   const [servicesLoading, setServicesLoading] = useState(true);
   const [customersError, setCustomersError] = useState<string | null>(null);
   const [servicesError, setServicesError] = useState<string | null>(null);
 
-  const {
-    register,
-    handleSubmit,
-    formState,
-    watch,
-    setValue,
-    reset,
-  } = useForm<ScheduleFormValues>({
-    defaultValues: {
-      start: "",
-      end: "",
-      serviceId: "",
-      existingCustomerId: "",
-      customerName: "",
-      customerEmail: "",
-      customerPhone: "",
-    },
-  });
+  const { register, handleSubmit, formState, watch, setValue, reset } =
+    useForm<ScheduleFormValues>({
+      defaultValues: {
+        start: "",
+        end: "",
+        serviceId: "",
+        existingCustomerId: "",
+        customerName: "",
+        customerEmail: "",
+        customerPhone: "",
+      },
+    });
 
   const selectedCustomerId = watch("existingCustomerId");
   const selectedServiceId = watch("serviceId");
@@ -61,12 +58,12 @@ export default function NewAppointmentPage() {
         style: "currency",
         currency: "BRL",
       }),
-    []
+    [],
   );
 
   const selectedCustomer = useMemo(() => {
     return customers.find(
-      (customer) => String(customer.id) === selectedCustomerId
+      (customer) => String(customer.id) === selectedCustomerId,
     );
   }, [customers, selectedCustomerId]);
 
@@ -88,9 +85,10 @@ export default function NewAppointmentPage() {
         const response = await fetch("/api/customers", {
           signal: controller.signal,
         });
-        const data = await readApiJson<{ customers?: Customer[]; message?: string }>(
-          response
-        );
+        const data = await readApiJson<{
+          customers?: Customer[];
+          message?: string;
+        }>(response);
 
         if (!response.ok) {
           throw new Error(data?.message ?? "Unable to load customers.");
@@ -130,9 +128,10 @@ export default function NewAppointmentPage() {
         const response = await fetch("/api/services", {
           signal: controller.signal,
         });
-        const data = await readApiJson<{ services?: Service[]; message?: string }>(
-          response
-        );
+        const data = await readApiJson<{
+          services?: Service[];
+          message?: string;
+        }>(response);
 
         if (!response.ok) {
           throw new Error(data?.message ?? "Unable to load services.");
@@ -198,11 +197,12 @@ export default function NewAppointmentPage() {
     }
 
     const bookingPayload: Record<string, unknown> = {
-      start: startDate.toISOString(),
-      end: endDate.toISOString(),
+      start: startDate,
+      end: endDate,
       serviceId: Number(values.serviceId),
     };
-
+    console.log("sending this payload");
+    console.log(bookingPayload);
     if (customerMode === "existing") {
       if (!selectedCustomer) {
         setSubmitError("Please pick a customer.");
@@ -216,7 +216,7 @@ export default function NewAppointmentPage() {
         !values.customerPhone
       ) {
         setSubmitError(
-          "Please fill in name, email, and phone for the customer."
+          "Please fill in name, email, and phone for the customer.",
         );
         return;
       }
@@ -229,7 +229,7 @@ export default function NewAppointmentPage() {
     }
 
     setSubmitError(null);
-    setSubmitSuccess(null);
+    setCreatedAppointment(null);
 
     try {
       const response = await fetch("/api/bookings", {
@@ -240,26 +240,25 @@ export default function NewAppointmentPage() {
         body: JSON.stringify(bookingPayload),
       });
 
-      const data = await readApiJson<{ message?: string }>(response);
+      const data = await readApiJson<CreatedAppointment & { message?: string }>(
+        response,
+      );
       if (!response.ok) {
         throw new Error(data?.message ?? "Unable to create schedule.");
       }
 
-      setSubmitSuccess("Schedule created successfully.");
+      setCreatedAppointment(data);
       reset();
       setValue(
         "existingCustomerId",
-        customers.length ? String(customers[0].id) : ""
+        customers.length ? String(customers[0].id) : "",
       );
       setValue("serviceId", services.length ? String(services[0].dbId) : "");
-
-      setTimeout(() => {
-        router.push("/dashboard");
-      }, 1000);
     } catch (error) {
       console.error("Error creating schedule", error);
+      setCreatedAppointment(null);
       setSubmitError(
-        error instanceof Error ? error.message : "Unable to create schedule."
+        error instanceof Error ? error.message : "Unable to create schedule.",
       );
     }
   };
@@ -281,168 +280,177 @@ export default function NewAppointmentPage() {
           </Button>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Schedule Details</CardTitle>
-            <CardDescription>
-              Provide the time, service, and customer information.
-            </CardDescription>
-          </CardHeader>
+        {createdAppointment ? (
+          <AppointmentSummary appointment={createdAppointment} />
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle>Schedule Details</CardTitle>
+              <CardDescription>
+                Provide the time, service, and customer information.
+              </CardDescription>
+            </CardHeader>
 
-          <CardContent>
-            <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="start">Start</Label>
-                  <Input
-                    id="start"
-                    type="datetime-local"
-                    {...register("start", { required: true })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="end">End</Label>
-                  <Input
-                    id="end"
-                    type="datetime-local"
-                    {...register("end", { required: true })}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="serviceId">Service</Label>
-                <select
-                  id="serviceId"
-                  className="border-input flex h-9 w-full min-w-0 rounded-md border bg-background px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 md:text-sm"
-                  aria-invalid={!selectedServiceId}
-                  disabled={servicesLoading || !services.length}
-                  {...register("serviceId", { required: true })}
-                >
-                  {!services.length && (
-                    <option value="">
-                      {servicesLoading ? "Loading services..." : "No services available"}
-                    </option>
-                  )}
-                  {services.map((service) => (
-                    <option key={service.id} value={service.dbId}>
-                      {service.name} - {currencyFormatter.format(service.price)}
-                    </option>
-                  ))}
-                </select>
-                {servicesError && (
-                  <p className="text-sm text-destructive">{servicesError}</p>
-                )}
-              </div>
-
-              <div className="space-y-4">
-                <Label className="text-base font-semibold">
-                  Customer Information
-                </Label>
-                <div className="flex flex-wrap gap-4">
-                  <Button
-                    type="button"
-                    variant={customerMode === "existing" ? "default" : "outline"}
-                    onClick={() => setCustomerMode("existing")}
-                    disabled={!customers.length || customersLoading}
-                  >
-                    Select existing
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={customerMode === "new" ? "default" : "outline"}
-                    onClick={() => setCustomerMode("new")}
-                  >
-                    Register new
-                  </Button>
-                </div>
-
-                {customerMode === "existing" && (
+            <CardContent>
+              <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="existingCustomerId">
-                      Customer
-                    </Label>
-                    <input
-                      id="existingCustomerId"
-                      type="hidden"
-                      {...register("existingCustomerId", { required: true })}
+                    <Label htmlFor="start">Start</Label>
+                    <Input
+                      id="start"
+                      type="datetime-local"
+                      {...register("start", { required: true })}
                     />
-                    <CustomerSelect
-                      customers={customers}
-                      value={selectedCustomerId}
-                      loading={customersLoading}
-                      onChange={(customer) =>
-                        setValue(
-                          "existingCustomerId",
-                          customer ? String(customer.id) : "",
-                          { shouldDirty: true, shouldValidate: true }
-                        )
-                      }
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="end">End</Label>
+                    <Input
+                      id="end"
+                      type="datetime-local"
+                      {...register("end", { required: true })}
                     />
-                    {customersError && (
-                      <p className="text-sm text-destructive">{customersError}</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="serviceId">Service</Label>
+                  <select
+                    id="serviceId"
+                    className="border-input flex h-9 w-full min-w-0 rounded-md border bg-background px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 md:text-sm"
+                    aria-invalid={!selectedServiceId}
+                    disabled={servicesLoading || !services.length}
+                    {...register("serviceId", { required: true })}
+                  >
+                    {!services.length && (
+                      <option value="">
+                        {servicesLoading
+                          ? "Loading services..."
+                          : "No services available"}
+                      </option>
                     )}
+                    {services.map((service) => (
+                      <option key={service.id} value={service.dbId}>
+                        {service.name} -{" "}
+                        {currencyFormatter.format(service.price)}
+                      </option>
+                    ))}
+                  </select>
+                  {servicesError && (
+                    <p className="text-sm text-destructive">{servicesError}</p>
+                  )}
+                </div>
+
+                <div className="space-y-4">
+                  <Label className="text-base font-semibold">
+                    Customer Information
+                  </Label>
+                  <div className="flex flex-wrap gap-4">
+                    <Button
+                      type="button"
+                      variant={
+                        customerMode === "existing" ? "default" : "outline"
+                      }
+                      onClick={() => setCustomerMode("existing")}
+                      disabled={!customers.length || customersLoading}
+                    >
+                      Select existing
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={customerMode === "new" ? "default" : "outline"}
+                      onClick={() => setCustomerMode("new")}
+                    >
+                      Register new
+                    </Button>
                   </div>
+
+                  {customerMode === "existing" && (
+                    <div className="space-y-2">
+                      <Label htmlFor="existingCustomerId">Customer</Label>
+                      <input
+                        id="existingCustomerId"
+                        type="hidden"
+                        {...register("existingCustomerId", { required: true })}
+                      />
+                      <CustomerSelect
+                        customers={customers}
+                        value={selectedCustomerId}
+                        loading={customersLoading}
+                        onChange={(customer) =>
+                          setValue(
+                            "existingCustomerId",
+                            customer ? String(customer.id) : "",
+                            { shouldDirty: true, shouldValidate: true },
+                          )
+                        }
+                      />
+                      {customersError && (
+                        <p className="text-sm text-destructive">
+                          {customersError}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {customerMode === "new" && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <Label htmlFor="customerName">Full name</Label>
+                        <Input
+                          id="customerName"
+                          placeholder="Customer name"
+                          {...register("customerName", { required: true })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="customerEmail">Email</Label>
+                        <Input
+                          id="customerEmail"
+                          type="email"
+                          placeholder="customer@email.com"
+                          {...register("customerEmail", { required: true })}
+                        />
+                      </div>
+                      <div className="space-y-2 md:col-span-2">
+                        <Label htmlFor="customerPhone">Phone</Label>
+                        <Input
+                          id="customerPhone"
+                          placeholder="+55 11 99999-0000"
+                          {...register("customerPhone", { required: true })}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {submitError && (
+                  <Alert variant="destructive">
+                    <AlertDescription>{submitError}</AlertDescription>
+                  </Alert>
                 )}
 
-                {customerMode === "new" && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="customerName">Full name</Label>
-                      <Input
-                        id="customerName"
-                        placeholder="Customer name"
-                        {...register("customerName", { required: true })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="customerEmail">Email</Label>
-                      <Input
-                        id="customerEmail"
-                        type="email"
-                        placeholder="customer@email.com"
-                        {...register("customerEmail", { required: true })}
-                      />
-                    </div>
-                    <div className="space-y-2 md:col-span-2">
-                      <Label htmlFor="customerPhone">Phone</Label>
-                      <Input
-                        id="customerPhone"
-                        placeholder="+55 11 99999-0000"
-                        {...register("customerPhone", { required: true })}
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {submitError && (
-                <Alert variant="destructive">
-                  <AlertDescription>{submitError}</AlertDescription>
-                </Alert>
-              )}
-
-              {submitSuccess && (
-                <Alert>
-                  <AlertDescription>{submitSuccess}</AlertDescription>
-                </Alert>
-              )}
-
-              <div className="flex items-center gap-4">
-                <Button
-                  type="submit"
-                  disabled={formState.isSubmitting}
-                  className="min-w-[160px]"
-                >
-                  {formState.isSubmitting ? "Creating..." : "Create appointment"}
-                </Button>
-                <Button variant="ghost" type="button" onClick={() => router.push("/dashboard")}>
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+                <div className="flex items-center gap-4">
+                  <Button
+                    type="submit"
+                    disabled={formState.isSubmitting}
+                    className="min-w-[160px]"
+                  >
+                    {formState.isSubmitting
+                      ? "Creating..."
+                      : "Create appointment"}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    type="button"
+                    onClick={() => router.push("/dashboard")}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
