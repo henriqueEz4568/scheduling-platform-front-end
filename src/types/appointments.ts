@@ -14,46 +14,46 @@ export type Service = {
   description?: string;
 };
 
-export type BookingService = Service & {
-  user: {
-    id: string;
-    dbId: number;
-    name: string;
-    role: string;
-    email: string;
-    created: string;
-    modified: string;
-    removed: string | null;
+export type BookingService = Partial<Service> & {
+  user?: {
+    id?: string;
+    dbId?: number;
+    name?: string;
+    role?: string;
+    email?: string;
+    created?: string;
+    modified?: string;
+    removed?: string | null;
   };
-  created: string;
-  modified: string;
-  removed: string | null;
+  created?: string;
+  modified?: string;
+  removed?: string | null;
 };
 
-export type BookingCustomer = Customer & {
-  dbId: number;
-  created: string;
-  modified: string;
-  removed: string | null;
+export type BookingCustomer = Partial<Customer> & {
+  dbId?: number;
+  created?: string;
+  modified?: string;
+  removed?: string | null;
 };
 
 export type BookingFlowStatus = {
-  id: string;
-  dbId: number;
-  name: string;
-  created: string;
-  modified: string;
-  removed: string | null;
+  id?: string;
+  dbId?: number;
+  name?: string;
+  created?: string;
+  modified?: string;
+  removed?: string | null;
 };
 
 export type CreatedAppointment = {
-  id: string;
-  start: string;
-  end: string;
-  service: BookingService;
-  customer: BookingCustomer;
-  status: BookingFlowStatus;
-  paymentStatus: BookingFlowStatus;
+  id?: string;
+  start?: string;
+  end?: string;
+  service?: BookingService;
+  customer?: BookingCustomer;
+  status?: BookingFlowStatus;
+  paymentStatus?: BookingFlowStatus;
 };
 
 export type ScheduleFormValues = {

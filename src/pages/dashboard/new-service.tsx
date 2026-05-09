@@ -16,10 +16,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ServiceSummary } from "@/components/service-summary";
-import type {
-  CreateServiceFormValues,
-  CreatedService,
-} from "@/types/services";
+import { apiFetch } from "@/lib/client/api-fetch";
+import type { CreateServiceFormValues, CreatedService } from "@/types/services";
+import type { ApiErrorResponse } from "@/types/api";
 
 const defaultValues: CreateServiceFormValues = {
   name: "",
@@ -30,7 +29,7 @@ const defaultValues: CreateServiceFormValues = {
 
 export default function NewServicePage() {
   const [createdService, setCreatedService] = useState<CreatedService | null>(
-    null
+    null,
   );
   const [submitError, setSubmitError] = useState<string | null>(null);
   const {
@@ -65,18 +64,24 @@ export default function NewServicePage() {
       return;
     }
 
-    if (!Number.isFinite(normalizedPayload.duration) || normalizedPayload.duration <= 0) {
+    if (
+      !Number.isFinite(normalizedPayload.duration) ||
+      normalizedPayload.duration <= 0
+    ) {
       setSubmitError("Duração deve ser um número maior que zero.");
       return;
     }
 
-    if (!Number.isFinite(normalizedPayload.price) || normalizedPayload.price < 0) {
+    if (
+      !Number.isFinite(normalizedPayload.price) ||
+      normalizedPayload.price < 0
+    ) {
       setSubmitError("Preço deve ser um valor válido.");
       return;
     }
 
     try {
-      const response = await fetch("/api/services", {
+      const response = await apiFetch("/api/services", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -84,8 +89,8 @@ export default function NewServicePage() {
         body: JSON.stringify(normalizedPayload),
       });
 
-      const data = await readApiJson<CreatedService & { message?: string }>(
-        response
+      const data = await readApiJson<CreatedService & ApiErrorResponse>(
+        response,
       );
 
       if (!response.ok) {
@@ -113,7 +118,7 @@ export default function NewServicePage() {
               Novo Serviço
             </div>
             <h1 className="text-4xl font-bold text-foreground">
-              Cadastre um serviço incrível
+              Cadastre um serviço
             </h1>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto lg:mx-0">
               Defina nome, duração e valor para disponibilizar seus serviços com

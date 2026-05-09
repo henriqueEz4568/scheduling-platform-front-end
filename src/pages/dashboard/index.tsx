@@ -40,6 +40,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { AuthUser } from "@/types/user";
+import { handleUnauthorizedRedirect } from "@/lib/client/auth";
 
 // Mock data
 const todaysSchedule = [
@@ -267,10 +268,7 @@ export default function DashboardPage() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() => {
-                    if (typeof window !== "undefined") {
-                      localStorage.removeItem("auth_user");
-                    }
-                    window.location.href = "/";
+                    handleUnauthorizedRedirect("/");
                   }}
                 >
                   <LogOut className="mr-2 h-4 w-4" />

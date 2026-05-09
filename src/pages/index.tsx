@@ -81,7 +81,6 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Login Form */}
         <Card className="shadow-lg border-0 bg-card/95 backdrop-blur">
           <CardHeader className="space-y-1 text-center">
             <CardTitle className="text-2xl font-semibold">
@@ -93,14 +92,6 @@ export default function LoginPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              {/* Error Message */}
-              {/* {error && (
-                <Alert variant="destructive">
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )} */}
-
-              {/* Email Field */}
               <div className="space-y-2">
                 <Label htmlFor="email">Email address</Label>
                 <div className="relative">

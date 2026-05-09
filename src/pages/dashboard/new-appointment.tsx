@@ -17,12 +17,14 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CustomerSelect } from "@/components/customer-select";
 import { AppointmentSummary } from "@/components/appointment-summary";
+import { apiFetch } from "@/lib/client/api-fetch";
 import type {
   CreatedAppointment,
   Customer,
   ScheduleFormValues,
   Service,
 } from "@/types/appointments";
+import type { ApiErrorResponse } from "@/types/api";
 
 export default function NewAppointmentPage() {
   const router = useRouter();
@@ -82,13 +84,15 @@ export default function NewAppointmentPage() {
       setCustomersLoading(true);
       setCustomersError(null);
       try {
-        const response = await fetch("/api/customers", {
+        const response = await apiFetch("/api/customers", {
           signal: controller.signal,
         });
-        const data = await readApiJson<{
+        const data = await readApiJson<
+          {
           customers?: Customer[];
           message?: string;
-        }>(response);
+        } & ApiErrorResponse
+        >(response);
 
         if (!response.ok) {
           throw new Error(data?.message ?? "Unable to load customers.");
@@ -125,13 +129,15 @@ export default function NewAppointmentPage() {
       setServicesLoading(true);
       setServicesError(null);
       try {
-        const response = await fetch("/api/services", {
+        const response = await apiFetch("/api/services", {
           signal: controller.signal,
         });
-        const data = await readApiJson<{
+        const data = await readApiJson<
+          {
           services?: Service[];
           message?: string;
-        }>(response);
+        } & ApiErrorResponse
+        >(response);
 
         if (!response.ok) {
           throw new Error(data?.message ?? "Unable to load services.");
@@ -232,7 +238,7 @@ export default function NewAppointmentPage() {
     setCreatedAppointment(null);
 
     try {
-      const response = await fetch("/api/bookings", {
+      const response = await apiFetch("/api/bookings", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -240,9 +246,9 @@ export default function NewAppointmentPage() {
         body: JSON.stringify(bookingPayload),
       });
 
-      const data = await readApiJson<CreatedAppointment & { message?: string }>(
-        response,
-      );
+      const data = await readApiJson<
+        CreatedAppointment & ApiErrorResponse
+      >(response);
       if (!response.ok) {
         throw new Error(data?.message ?? "Unable to create schedule.");
       }
