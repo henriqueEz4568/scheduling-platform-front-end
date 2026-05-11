@@ -15,6 +15,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { CustomerSelect } from "@/components/customer-select";
 import { AppointmentSummary } from "@/components/appointment-summary";
 import { apiFetch } from "@/lib/client/api-fetch";
@@ -89,9 +96,9 @@ export default function NewAppointmentPage() {
         });
         const data = await readApiJson<
           {
-          customers?: Customer[];
-          message?: string;
-        } & ApiErrorResponse
+            customers?: Customer[];
+            message?: string;
+          } & ApiErrorResponse
         >(response);
 
         if (!response.ok) {
@@ -134,9 +141,9 @@ export default function NewAppointmentPage() {
         });
         const data = await readApiJson<
           {
-          services?: Service[];
-          message?: string;
-        } & ApiErrorResponse
+            services?: Service[];
+            message?: string;
+          } & ApiErrorResponse
         >(response);
 
         if (!response.ok) {
@@ -181,7 +188,7 @@ export default function NewAppointmentPage() {
 
   useEffect(() => {
     if (services.length && !selectedServiceId) {
-      setValue("serviceId", String(services[0].dbId));
+      setValue("serviceId", services[0].id);
     }
     if (!services.length && selectedServiceId) {
       setValue("serviceId", "");
@@ -205,10 +212,9 @@ export default function NewAppointmentPage() {
     const bookingPayload: Record<string, unknown> = {
       start: startDate,
       end: endDate,
-      serviceId: Number(values.serviceId),
+      serviceId: values.serviceId,
     };
-    console.log("sending this payload");
-    console.log(bookingPayload);
+
     if (customerMode === "existing") {
       if (!selectedCustomer) {
         setSubmitError("Please pick a customer.");
@@ -246,9 +252,9 @@ export default function NewAppointmentPage() {
         body: JSON.stringify(bookingPayload),
       });
 
-      const data = await readApiJson<
-        CreatedAppointment & ApiErrorResponse
-      >(response);
+      const data = await readApiJson<CreatedAppointment & ApiErrorResponse>(
+        response,
+      );
       if (!response.ok) {
         throw new Error(data?.message ?? "Unable to create schedule.");
       }
@@ -259,7 +265,7 @@ export default function NewAppointmentPage() {
         "existingCustomerId",
         customers.length ? String(customers[0].id) : "",
       );
-      setValue("serviceId", services.length ? String(services[0].dbId) : "");
+      setValue("serviceId", services.length ? services[0].id : "");
     } catch (error) {
       console.error("Error creating schedule", error);
       setCreatedAppointment(null);
@@ -320,27 +326,39 @@ export default function NewAppointmentPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="serviceId">Service</Label>
-                  <select
+                  <Input
                     id="serviceId"
-                    className="border-input flex h-9 w-full min-w-0 rounded-md border bg-background px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 md:text-sm"
-                    aria-invalid={!selectedServiceId}
-                    disabled={servicesLoading || !services.length}
+                    type="hidden"
                     {...register("serviceId", { required: true })}
+                  />
+                  <Select
+                    value={selectedServiceId}
+                    disabled={servicesLoading || !services.length}
+                    onValueChange={(value) =>
+                      setValue("serviceId", value, {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      })
+                    }
                   >
-                    {!services.length && (
-                      <option value="">
-                        {servicesLoading
-                          ? "Loading services..."
-                          : "No services available"}
-                      </option>
-                    )}
-                    {services.map((service) => (
-                      <option key={service.id} value={service.dbId}>
-                        {service.name} -{" "}
-                        {currencyFormatter.format(service.price)}
-                      </option>
-                    ))}
-                  </select>
+                    <SelectTrigger aria-invalid={!selectedServiceId}>
+                      <SelectValue
+                        placeholder={
+                          servicesLoading
+                            ? "Loading services..."
+                            : "No services available"
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {services.map((service) => (
+                        <SelectItem key={service.id} value={service.id}>
+                          {service.name} -{" "}
+                          {currencyFormatter.format(service.price)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   {servicesError && (
                     <p className="text-sm text-destructive">{servicesError}</p>
                   )}
@@ -373,7 +391,7 @@ export default function NewAppointmentPage() {
                   {customerMode === "existing" && (
                     <div className="space-y-2">
                       <Label htmlFor="existingCustomerId">Customer</Label>
-                      <input
+                      <Input
                         id="existingCustomerId"
                         type="hidden"
                         {...register("existingCustomerId", { required: true })}
