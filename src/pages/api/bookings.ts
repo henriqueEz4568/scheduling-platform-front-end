@@ -7,7 +7,7 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method !== "POST") {
+  if (req.method !== "GET" && req.method !== "POST") {
     return res.status(405).json({
       success: false,
       message: "Method not allowed",
@@ -23,6 +23,17 @@ export default async function handler(
   }
 
   try {
+    if (req.method === "GET") {
+      const response = await api.get("/bookings", {
+        params: req.query,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      return res.status(200).json(response.data);
+    }
+
     const response = await api.post("/bookings", req.body, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -33,7 +44,10 @@ export default async function handler(
   } catch (error) {
     const axiosError = error as AxiosError<{ message?: string }>;
     const message =
-      axiosError.response?.data?.message || "Unable to create schedule.";
+      axiosError.response?.data?.message ||
+      (req.method === "POST"
+        ? "Unable to create schedule."
+        : "Unable to load bookings.");
     const status = axiosError.response?.status ?? 500;
 
     return res.status(status).json({

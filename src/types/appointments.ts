@@ -56,6 +56,13 @@ export type CreatedAppointment = {
   paymentStatus?: BookingFlowStatus;
 };
 
+export type BookingsListResponse = {
+  bookings?: CreatedAppointment[];
+  totalRows?: number;
+  totalPages?: number;
+  message?: string;
+};
+
 export type ScheduleFormValues = {
   start: string;
   end: string;

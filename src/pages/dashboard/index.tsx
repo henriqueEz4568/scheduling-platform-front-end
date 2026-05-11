@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { io } from "socket.io-client";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,36 +10,17 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import Cookies from "js-cookie";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
-  Calendar,
-  Users,
-  Settings,
   FileText,
-  Bell,
   Plus,
   UserPlus,
-  BarChart3,
   Clock,
   CheckCircle,
   AlertCircle,
-  User,
-  LogOut,
-  Menu,
   Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 import { AuthUser } from "@/types/user";
-import { handleUnauthorizedRedirect } from "@/lib/client/auth";
 
 // Mock data
 const todaysSchedule = [
@@ -125,10 +105,7 @@ const upcomingAppointments = [
 ];
 
 export default function DashboardPage() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [messages, setMessages] = useState<Record<string, unknown>[]>([]);
   const [authUser, setAuthUser] = useState<AuthUser | null>(null);
-  const token = Cookies.get("token");
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -148,31 +125,7 @@ export default function DashboardPage() {
     }
   }, []);
 
-  useEffect(() => {
-    const s = io(`${process.env.NEXT_PUBLIC_API_URL}`, {
-      auth: {
-        token,
-      },
-    });
-
-    s.on("ping", (data) => {
-      setMessages((prev) => [data as Record<string, unknown>, ...prev]);
-      console.log("Mensagem recebida:", data);
-    });
-
-    return () => {
-      s.disconnect();
-    };
-  }, [token]);
-
   const displayName = authUser?.name?.trim() || "Usuario";
-  const displayEmail = authUser?.email || "sem-email";
-  const avatarFallback = displayName
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((namePart) => namePart[0]?.toUpperCase() ?? "")
-    .join("");
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -201,120 +154,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Top Navigation */}
-      <header className="bg-card border-b border-border sticky top-0 z-50">
-        <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center space-x-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="lg:hidden"
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
-            <div className="flex items-center space-x-2">
-              <div className="bg-primary rounded-lg p-2">
-                <Calendar className="h-6 w-6 text-primary-foreground" />
-              </div>
-              <h1 className="text-xl font-bold text-foreground">SchedulePro</h1>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="sm" className="relative">
-              <Bell className="h-5 w-5" />
-              <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                {messages.length}
-              </span>
-            </Button>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="relative h-8 w-8 rounded-full"
-                >
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage
-                      src="/placeholder.svg?height=32&width=32"
-                      alt="User"
-                    />
-                    <AvatarFallback>{avatarFallback || "U"}</AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">
-                      {displayName}
-                    </p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                      {displayEmail}
-                    </p>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <User className="mr-2 h-4 w-4" />
-                  <span>Profile</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => {
-                    handleUnauthorizedRedirect("/");
-                  }}
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-      </header>
-
-      <div className="flex">
-        {/* Sidebar */}
-        <aside
-          className={`bg-card border-r border-border w-64 min-h-screen transition-transform duration-300 ${
-            sidebarOpen ? "translate-x-0" : "-translate-x-full"
-          } lg:translate-x-0 fixed lg:static z-40`}
-        >
-          <nav className="p-4 space-y-2">
-            <Button variant="ghost" className="w-full justify-start" asChild>
-              <Link href="/dashboard">
-                <Calendar className="mr-2 h-4 w-4" />
-                Appointments
-              </Link>
-            </Button>
-            <Button variant="ghost" className="w-full justify-start">
-              <Users className="mr-2 h-4 w-4" />
-              Customers
-            </Button>
-            <Button variant="ghost" className="w-full justify-start">
-              <Settings className="mr-2 h-4 w-4" />
-              Services
-            </Button>
-            <Button variant="ghost" className="w-full justify-start">
-              <BarChart3 className="mr-2 h-4 w-4" />
-              Reports
-            </Button>
-            <Button variant="ghost" className="w-full justify-start">
-              <Settings className="mr-2 h-4 w-4" />
-              Settings
-            </Button>
-          </nav>
-        </aside>
-
-        {/* Main Content */}
-        <main className="flex-1 p-6 lg:ml-0">
+    <div className="p-6">
           <div className="max-w-7xl mx-auto space-y-6">
             {/* Welcome Header */}
             <div>
@@ -362,27 +202,14 @@ export default function DashboardPage() {
                   <Button
                     variant="outline"
                     className="flex items-center space-x-2 bg-transparent"
+                    asChild
                   >
-                    <FileText className="h-4 w-4" />
-                    <span>View Reports</span>
+                    <Link href="/dashboard/bookings">
+                      <FileText className="h-4 w-4" />
+                      <span>View Bookings</span>
+                    </Link>
                   </Button>
                 </div>
-
-                {messages.length > 0 && (
-                  <div className="space-y-2">
-                    <h3 className="font-medium text-foreground mb-2">
-                      Notifications:
-                    </h3>
-                    {messages.map((msg, idx) => (
-                      <div
-                        key={idx}
-                        className="p-2 border border-border rounded-lg bg-muted/20"
-                      >
-                        {JSON.stringify(msg)}
-                      </div>
-                    ))}
-                  </div>
-                )}
               </CardContent>
             </Card>
 
@@ -464,16 +291,6 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
-        </main>
-      </div>
-
-      {/* Overlay for mobile sidebar */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
     </div>
   );
 }
