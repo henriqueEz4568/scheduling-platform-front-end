@@ -1,3 +1,4 @@
+import { isMockClient } from "@/mock";
 import type { RealtimeConfig, RealtimeConfigInput } from "@/types/realtime";
 
 const ALLOWED_PROTOCOLS = new Set(["http:", "https:", "ws:", "wss:"]);
@@ -28,6 +29,11 @@ export function parseRealtimeConfig({
 }
 
 export function getRealtimeConfig(): RealtimeConfig {
+  // Release mode has no backend: never open the socket (no bell counter).
+  if (isMockClient()) {
+    return { enabled: false, reason: "disabled" };
+  }
+
   // NEXT_PUBLIC_* values are inlined at build time, so they must be read
   // with these literal property accesses.
   return parseRealtimeConfig({

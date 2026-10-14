@@ -4,6 +4,8 @@ import {
   getUnauthorizedEventName,
   handleUnauthorizedRedirect,
 } from "@/lib/client/auth";
+import { isMockClient } from "@/mock";
+import { MockBanner } from "@/mock/mock-banner";
 import type { AppPropsWithLayout } from "@/types/layout";
 
 const withoutLayout = (page: ReactElement) => page;
@@ -26,5 +28,11 @@ export default function App({ Component, pageProps }: AppPropsWithLayout) {
   // "/register" render on their own.
   const getLayout = Component.getLayout ?? withoutLayout;
 
-  return getLayout(<Component {...pageProps} />);
+  return (
+    <>
+      {getLayout(<Component {...pageProps} />)}
+      {/* NEXT_PUBLIC_APP_ENV is inlined at build time: same output on server and client. */}
+      {isMockClient() ? <MockBanner /> : null}
+    </>
+  );
 }
