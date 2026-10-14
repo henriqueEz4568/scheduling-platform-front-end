@@ -25,7 +25,11 @@ import {
 import { CustomerSelect } from "@/components/customer-select";
 import { AppointmentSummary } from "@/components/appointment-summary";
 import { apiFetch } from "@/lib/client/api-fetch";
+import { createBookingSchema } from "@/lib/schemas/booking";
+import { getFirstIssueMessage } from "@/lib/schemas/utils";
+import { toIsoDateTime } from "@/utils";
 import type {
+  CreateBookingPayload,
   CreatedAppointment,
   Customer,
   ScheduleFormValues,
@@ -196,48 +200,25 @@ export default function NewAppointmentPage() {
   }, [services, selectedServiceId, setValue]);
 
   const onSubmit = async (values: ScheduleFormValues) => {
-    const startDate = new Date(values.start);
-    const endDate = new Date(values.end);
-
-    if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
-      setSubmitError("Please provide valid start and end dates.");
-      return;
-    }
-
-    if (!values.serviceId) {
-      setSubmitError("Please select a service.");
-      return;
-    }
-
-    const bookingPayload: Record<string, unknown> = {
-      start: startDate,
-      end: endDate,
+    const bookingPayload: CreateBookingPayload = {
+      start: toIsoDateTime(values.start),
+      end: toIsoDateTime(values.end),
       serviceId: values.serviceId,
+      ...(customerMode === "existing"
+        ? { customerId: selectedCustomer ? String(selectedCustomer.id) : "" }
+        : {
+            customer: {
+              name: values.customerName,
+              email: values.customerEmail,
+              phone: values.customerPhone,
+            },
+          }),
     };
 
-    if (customerMode === "existing") {
-      if (!selectedCustomer) {
-        setSubmitError("Please pick a customer.");
-        return;
-      }
-      bookingPayload.customerId = String(selectedCustomer.id);
-    } else {
-      if (
-        !values.customerName ||
-        !values.customerEmail ||
-        !values.customerPhone
-      ) {
-        setSubmitError(
-          "Please fill in name, email, and phone for the customer.",
-        );
-        return;
-      }
-
-      bookingPayload.customer = {
-        name: values.customerName,
-        email: values.customerEmail,
-        phone: values.customerPhone,
-      };
+    const parsedPayload = createBookingSchema.safeParse(bookingPayload);
+    if (!parsedPayload.success) {
+      setSubmitError(getFirstIssueMessage(parsedPayload.error));
+      return;
     }
 
     setSubmitError(null);
@@ -249,7 +230,7 @@ export default function NewAppointmentPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(bookingPayload),
+        body: JSON.stringify(parsedPayload.data),
       });
 
       const data = await readApiJson<CreatedAppointment & ApiErrorResponse>(

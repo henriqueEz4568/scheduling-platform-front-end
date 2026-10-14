@@ -1,3 +1,4 @@
+import { createServiceSchema } from "@/lib/schemas/service";
 import { createProxyHandler } from "@/lib/server/proxy-handler";
 
 export default createProxyHandler({
@@ -7,6 +8,7 @@ export default createProxyHandler({
   },
   POST: {
     path: "/services",
+    bodySchema: createServiceSchema,
     errorMessage: "Unable to create service.",
   },
 });

@@ -17,7 +17,13 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ServiceSummary } from "@/components/service-summary";
 import { apiFetch } from "@/lib/client/api-fetch";
-import type { CreateServiceFormValues, CreatedService } from "@/types/services";
+import { createServiceSchema } from "@/lib/schemas/service";
+import { getFirstIssueMessage } from "@/lib/schemas/utils";
+import type {
+  CreateServiceFormValues,
+  CreateServicePayload,
+  CreatedService,
+} from "@/types/services";
 import type { ApiErrorResponse } from "@/types/api";
 
 const defaultValues: CreateServiceFormValues = {
@@ -52,31 +58,16 @@ export default function NewServicePage() {
   const onSubmit = async (values: CreateServiceFormValues) => {
     setSubmitError(null);
 
-    const normalizedPayload = {
-      name: values.name.trim(),
+    const servicePayload: CreateServicePayload = {
+      name: values.name,
       duration: Number(values.duration),
       price: Number(values.price),
-      description: values.description.trim(),
+      description: values.description,
     };
 
-    if (!normalizedPayload.name) {
-      setSubmitError("Informe um nome para o serviço.");
-      return;
-    }
-
-    if (
-      !Number.isFinite(normalizedPayload.duration) ||
-      normalizedPayload.duration <= 0
-    ) {
-      setSubmitError("Duração deve ser um número maior que zero.");
-      return;
-    }
-
-    if (
-      !Number.isFinite(normalizedPayload.price) ||
-      normalizedPayload.price < 0
-    ) {
-      setSubmitError("Preço deve ser um valor válido.");
+    const parsedPayload = createServiceSchema.safeParse(servicePayload);
+    if (!parsedPayload.success) {
+      setSubmitError(getFirstIssueMessage(parsedPayload.error));
       return;
     }
 
@@ -86,7 +77,7 @@ export default function NewServicePage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(normalizedPayload),
+        body: JSON.stringify(parsedPayload.data),
       });
 
       const data = await readApiJson<CreatedService & ApiErrorResponse>(
