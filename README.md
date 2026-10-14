@@ -17,6 +17,8 @@ Abra [http://localhost:3000](http://localhost:3000).
 | Script           | O que faz                          |
 | ---------------- | ---------------------------------- |
 | `yarn dev`       | servidor de desenvolvimento        |
+| `yarn dev:release` | desenvolvimento em modo release (dados fictícios) |
+| `yarn build:release` / `yarn start:release` | build/servidor de produção em modo release |
 | `yarn build`     | build de produção                  |
 | `yarn start`     | serve o build de produção          |
 | `yarn lint`      | ESLint (`next lint`)               |
@@ -56,6 +58,67 @@ desligado. O socket é desconectado no logout.
 > onde não for usado e, idealmente, faça o backend emitir um token próprio para
 > o socket, de vida curta e escopo restrito, em vez de reaproveitar o token de
 > sessão.
+
+## Modo release (dados fictícios)
+
+Permite testar o app **sem backend**: o BFF (`src/pages/api`) responde com dados
+fixos em memória e nenhuma requisição sai do servidor para o backend real.
+
+> ⚠️ **Nunca defina `NEXT_PUBLIC_APP_ENV=release` nem `NODE_ENV=release` em
+> produção.** Nesse modo o login aceita **qualquer** e-mail e senha (bypass de
+> autenticação).
+
+### Como ligar
+
+Só liga com o valor exato `release` (nunca por padrão):
+
+```bash
+yarn dev:release                       # desenvolvimento
+yarn build:release && yarn start:release  # build de produção
+```
+
+`NEXT_PUBLIC_APP_ENV` é embutida no build, então o `start:release` precisa de um
+build feito com `build:release`. `API_URL` não é necessária nesse modo.
+
+### O que é mockado
+
+Tudo fica em `src/mock/`. A instância axios do BFF (`src/lib/server/api-client.ts`)
+usa o `mockAdapter` quando `isMock()` é verdadeiro, então os handlers de
+`pages/api` não mudam.
+
+| Rota do backend      | Resposta |
+| -------------------- | -------- |
+| `POST /auth/login`   | aceita qualquer credencial; token com formato de JWT (expira em 7 dias, sem assinatura válida) |
+| `POST /auth/sign_up` | adiciona o usuário |
+| `GET /bookings`      | paginado por `page`/`limit` (mais recentes primeiro) |
+| `POST /bookings`     | cria o agendamento (cliente existente ou novo), status `pending` |
+| `GET /customers`     | 5 clientes fixos |
+| `GET /services` / `POST /services` | 4 serviços fixos / adiciona serviço |
+
+Rotas não mapeadas respondem 404 `Rota não mockada: MÉTODO /url`. O socket.io
+não conecta (o sino fica sem contador) e uma faixa "Modo release: dados
+fictícios" aparece no rodapé.
+
+### Estado em memória
+
+Os dados ficam em `globalThis.__mockDb`, compartilhados entre as rotas e
+preservados no hot reload. Reiniciar o servidor volta aos valores iniciais.
+
+### Sobre `NODE_ENV=release`
+
+`isMock()` também aceita `NODE_ENV=release`, mas não é recomendado. No Next 15,
+`next dev`/`next build`/`next start` mantêm um `NODE_ENV` fora do padrão e
+exibem o aviso [non-standard-node-env](https://nextjs.org/docs/messages/non-standard-node-env).
+Porém `process.env.NODE_ENV` é substituído no código compilado por
+`development` ou `production`, então:
+
+- no servidor, `isMock()` lê o `NODE_ENV` do ambiente em tempo de execução e
+  liga o mock;
+- no navegador o valor nunca chega: sem faixa e sem bloqueio do socket por
+  essa via;
+- React e outras dependências podem misturar comportamento de dev e produção.
+
+Prefira sempre `NEXT_PUBLIC_APP_ENV=release`.
 
 ## Learn More
 
