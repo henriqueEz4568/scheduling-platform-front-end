@@ -2,8 +2,6 @@
 
 import { useEffect, useState, type ReactElement } from "react";
 import Link from "next/link";
-import Cookies from "js-cookie";
-import { io } from "socket.io-client";
 import {
   BarChart3,
   Bell,
@@ -25,15 +23,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useRealtime } from "@/hooks/use-realtime";
 import { handleUnauthorizedRedirect } from "@/lib/client/auth";
 import type { AppLayoutProps } from "@/types/layout";
 import type { AuthUser } from "@/types/user";
 
 export function AppLayout({ children }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [messages, setMessages] = useState<Record<string, unknown>[]>([]);
   const [authUser, setAuthUser] = useState<AuthUser | null>(null);
-  const token = Cookies.get("token");
+  const { enabled: realtimeEnabled, notifications } = useRealtime();
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -52,22 +50,6 @@ export function AppLayout({ children }: AppLayoutProps) {
       setAuthUser(null);
     }
   }, []);
-
-  useEffect(() => {
-    const socket = io(`${process.env.NEXT_PUBLIC_API_URL}`, {
-      auth: {
-        token,
-      },
-    });
-
-    socket.on("ping", (data) => {
-      setMessages((prev) => [data as Record<string, unknown>, ...prev]);
-    });
-
-    return () => {
-      socket.disconnect();
-    };
-  }, [token]);
 
   const displayName = authUser?.name?.trim() || "Usuario";
   const displayEmail = authUser?.email || "sem-email";
@@ -105,9 +87,11 @@ export function AppLayout({ children }: AppLayoutProps) {
           <div className="flex items-center space-x-4">
             <Button variant="ghost" size="sm" className="relative">
               <Bell className="h-5 w-5" />
-              <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-xs text-destructive-foreground">
-                {messages.length}
-              </span>
+              {realtimeEnabled ? (
+                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-xs text-destructive-foreground">
+                  {notifications.length}
+                </span>
+              ) : null}
             </Button>
 
             <DropdownMenu>

@@ -24,6 +24,27 @@ The `pages/api` directory is mapped to `/api/*`. Files in this directory are tre
 
 This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Realtime (socket.io)
+
+O sino de notificações usa socket.io através do hook `src/hooks/use-realtime.ts`.
+Ele só tenta conectar quando **as duas** variáveis abaixo estão corretas; caso
+contrário nenhuma conexão é aberta e o contador do sino não aparece:
+
+- `NEXT_PUBLIC_REALTIME_ENABLED=true`
+- `NEXT_PUBLIC_REALTIME_URL` com uma URL `http(s)://` ou `ws(s)://` válida
+
+Como o cookie de sessão `token` é `httpOnly`, o JavaScript não consegue lê-lo.
+O hook pede o token a `GET /api/realtime-token`, que exige uma sessão válida,
+responde com `Cache-Control: no-store` e devolve 404 quando o realtime está
+desligado. O socket é desconectado no logout.
+
+> **Risco:** enquanto o realtime estiver ligado, essa rota entrega ao JavaScript
+> o mesmo token que o cookie `httpOnly` protege. Um XSS na aplicação conseguiria
+> lê-lo e usá-lo contra a API até ele expirar. Mantenha o realtime desligado
+> onde não for usado e, idealmente, faça o backend emitir um token próprio para
+> o socket, de vida curta e escopo restrito, em vez de reaproveitar o token de
+> sessão.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
