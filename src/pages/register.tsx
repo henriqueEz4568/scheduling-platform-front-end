@@ -3,11 +3,13 @@ import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/router";
 import { RegisterForm } from "@/components/register-form";
-import {
+import { registerSchema } from "@/lib/schemas/register";
+import type {
+  RegisterApiResponse,
   RegisterFormFields,
-  registerSchema,
-} from "@/lib/schemas/register";
-import { RegisterApiResponse, RegisterSubmitResult } from "@/types/register";
+  RegisterSubmitResult,
+  SignUpPayload,
+} from "@/types/register";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -16,26 +18,24 @@ export default function RegisterPage() {
   const { register, handleSubmit, formState, setError } =
     useForm<RegisterFormFields>({
       resolver: zodResolver(registerSchema),
-      defaultValues: {
-        role: "admin",
-      },
     });
 
   const submitRegister = async (
     formValues: RegisterFormFields
   ): Promise<RegisterSubmitResult> => {
+    const payload: SignUpPayload = {
+      name: formValues.name,
+      email: formValues.email,
+      password: formValues.password,
+    };
+
     try {
       const response = await fetch("/api/sign-up", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          name: formValues.name,
-          email: formValues.email,
-          password: formValues.password,
-          role: formValues.role,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data: RegisterApiResponse = await response.json();
@@ -92,7 +92,6 @@ export default function RegisterPage() {
       isSubmitting={formState.isSubmitting}
       onSubmit={handleSubmit(handleFormSubmit)}
       loginPath="/"
-      roleValue="admin"
       showPassword={showPassword}
       showConfirmPassword={showConfirmPassword}
       onTogglePassword={() => setShowPassword((prev) => !prev)}
