@@ -4,7 +4,7 @@ import {
   getUnauthorizedEventName,
   handleUnauthorizedRedirect,
 } from "@/lib/client/auth";
-import { isMockClient } from "@/mock";
+import { isMockClient } from "@/mock/client";
 import { MockBanner } from "@/mock/mock-banner";
 import type { AppPropsWithLayout } from "@/types/layout";
 

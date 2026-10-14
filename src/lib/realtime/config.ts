@@ -1,4 +1,4 @@
-import { isMockClient } from "@/mock";
+import { isMockClient } from "@/mock/client";
 import type { RealtimeConfig, RealtimeConfigInput } from "@/types/realtime";
 
 const ALLOWED_PROTOCOLS = new Set(["http:", "https:", "ws:", "wss:"]);
