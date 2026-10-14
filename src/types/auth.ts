@@ -12,3 +12,8 @@ export type LoginBackendResponse = {
   token?: string;
   user?: AuthUser | null;
 };
+
+/** Decoded (unverified) JWT payload. */
+export type JwtPayload = Record<string, unknown> & {
+  exp?: unknown;
+};

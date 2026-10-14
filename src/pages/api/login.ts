@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { serialize } from "cookie";
 import { getApiClient } from "@/lib/server/api-client";
-import { AUTH_COOKIE_NAME } from "@/lib/server/auth";
+import { AUTH_COOKIE_NAME } from "@/lib/auth/session";
 import {
   describeError,
   mapBackendError,

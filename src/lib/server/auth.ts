@@ -1,6 +1,5 @@
 import type { NextApiRequest } from "next";
-
-export const AUTH_COOKIE_NAME = "token";
+import { AUTH_COOKIE_NAME } from "@/lib/auth/session";
 
 function getTokenFromAuthorizationHeader(req: NextApiRequest): string | null {
   const authorizationHeader = req.headers.authorization;

@@ -1,5 +1,6 @@
 import { isAxiosError } from "axios";
 import type { NextApiHandler, NextApiResponse } from "next";
+import { hasActiveSession } from "@/lib/auth/session";
 import { getApiClient } from "@/lib/server/api-client";
 import { extractAuthToken } from "@/lib/server/auth";
 import { getFirstIssueMessage } from "@/lib/schemas/utils";
@@ -95,6 +96,10 @@ export function withAuth(handlers: AuthenticatedHandlers): NextApiHandler {
     const token = extractAuthToken(req);
     if (!token) {
       return sendError(res, 401, "Authentication token not provided.");
+    }
+
+    if (!hasActiveSession(token)) {
+      return sendError(res, 401, "Session expired.");
     }
 
     await handler({ req, res, token });
