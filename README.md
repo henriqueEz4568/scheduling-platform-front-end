@@ -1,28 +1,61 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/pages/api-reference/create-next-app).
 
-## Getting Started
+## Primeiros passos
 
-First, run the development server:
+O gerenciador de pacotes é o **yarn** (v1).
 
 ```bash
-npm run dev
-# or
+cp .env.example .env.local
+yarn install
 yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abra [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-[API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
+| Script           | O que faz                          |
+| ---------------- | ---------------------------------- |
+| `yarn dev`       | servidor de desenvolvimento        |
+| `yarn build`     | build de produção                  |
+| `yarn start`     | serve o build de produção          |
+| `yarn lint`      | ESLint (`next lint`)               |
+| `yarn typecheck` | `tsc --noEmit`                     |
+| `yarn test`      | testes unitários (`vitest run`)    |
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) instead of React pages.
+## Variáveis de ambiente
 
-This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Veja `.env.example`.
+
+| Variável                       | Onde é lida | Descrição |
+| ------------------------------ | ----------- | --------- |
+| `API_URL`                      | servidor    | URL do backend usada pelo BFF (`src/lib/server/api-client.ts`). Obrigatória em produção; em desenvolvimento cai para `http://localhost:3333/`. |
+| `SIGNUP_DEFAULT_ROLE`          | servidor    | Papel das contas criadas em `/register` (padrão `admin`). O navegador não escolhe o papel. |
+| `NEXT_PUBLIC_REALTIME_ENABLED` | navegador   | `true` para ligar as notificações em tempo real. |
+| `NEXT_PUBLIC_REALTIME_URL`     | navegador   | URL do servidor socket.io. |
+
+> `NEXT_PUBLIC_API_URL` não é mais usada: renomeie para `API_URL`.
+
+## Realtime (socket.io)
+
+O sino de notificações usa socket.io através do hook `src/hooks/use-realtime.ts`.
+Ele só tenta conectar quando **as duas** variáveis abaixo estão corretas; caso
+contrário nenhuma conexão é aberta e o contador do sino não aparece:
+
+- `NEXT_PUBLIC_REALTIME_ENABLED=true`
+- `NEXT_PUBLIC_REALTIME_URL` com uma URL `http(s)://` ou `ws(s)://` válida
+
+Como o cookie de sessão `token` é `httpOnly`, o JavaScript não consegue lê-lo.
+O hook pede o token a `GET /api/realtime-token`, que exige uma sessão válida,
+responde com `Cache-Control: no-store` e devolve 404 quando o realtime está
+desligado. O socket é desconectado no logout.
+
+> **Risco:** enquanto o realtime estiver ligado, essa rota entrega ao JavaScript
+> o mesmo token que o cookie `httpOnly` protege. Um XSS na aplicação conseguiria
+> lê-lo e usá-lo contra a API até ele expirar. Mantenha o realtime desligado
+> onde não for usado e, idealmente, faça o backend emitir um token próprio para
+> o socket, de vida curta e escopo restrito, em vez de reaproveitar o token de
+> sessão.
 
 ## Learn More
 

@@ -1,31 +1,41 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { isAxiosError } from "axios";
-import { api } from "./index";
+import { signUpPayloadSchema } from "@/lib/schemas/register";
+import { getFirstIssueMessage } from "@/lib/schemas/utils";
+import { getApiClient } from "@/lib/server/api-client";
+import {
+  describeError,
+  mapBackendError,
+  sendError,
+  sendMethodNotAllowed,
+} from "@/lib/server/proxy-handler";
+import { getSignupRole } from "@/lib/server/signup-role";
+import type { SignUpBackendResponse } from "@/types/register";
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
   if (req.method !== "POST") {
-    return res
-      .status(405)
-      .json({ success: false, message: "Method not allowed" });
+    return sendMethodNotAllowed(res, ["POST"]);
+  }
+
+  // Strips anything the browser is not allowed to choose, role included.
+  const payload = signUpPayloadSchema.safeParse(req.body);
+  if (!payload.success) {
+    return sendError(res, 400, getFirstIssueMessage(payload.error));
   }
 
   try {
-    const { name, email, password, role } = req.body ?? {};
-    const { data } = await api.post("/auth/sign_up", {
-      name,
-      email,
-      password,
-      role,
-    });
+    const { data } = await getApiClient().post<SignUpBackendResponse>(
+      "/auth/sign_up",
+      {
+        ...payload.data,
+        role: getSignupRole(),
+      }
+    );
 
     if (!data?.success) {
-      return res.status(400).json({
-        success: false,
-        message: data?.message ?? "Unable to create account",
-      });
+      return sendError(res, 400, data?.message ?? "Unable to create account");
     }
 
     return res.status(201).json({
@@ -34,21 +44,14 @@ export default async function handler(
       message: "Account created successfully",
     });
   } catch (error) {
-    if (isAxiosError(error)) {
-      const statusCode = error.response?.status ?? 500;
-      const message =
-        (error.response?.data as { message?: string } | undefined)?.message ??
-        "Internal server error";
+    const { status, message } = mapBackendError(error, {
+      fallbackMessage: "Internal server error",
+    });
 
-      return res.status(statusCode).json({
-        success: false,
-        message,
-      });
+    if (status >= 500) {
+      console.error("API /sign-up error:", describeError(error));
     }
 
-    return res.status(500).json({
-      success: false,
-      message: "Internal server error",
-    });
+    return sendError(res, status, message);
   }
 }

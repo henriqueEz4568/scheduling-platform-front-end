@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { getAppLayout } from "@/components/app-layout";
 import {
   FileText,
   Plus,
@@ -294,3 +295,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+DashboardPage.getLayout = getAppLayout;
