@@ -1,7 +1,10 @@
 import axios, { type AxiosInstance } from "axios";
+import { isMock, mockAdapter } from "@/mock";
 
 const REQUEST_TIMEOUT_MS = 10_000;
 const DEVELOPMENT_API_URL = "http://localhost:3333/";
+// Never contacted: in release mode the mock adapter answers every request.
+const MOCK_API_URL = "http://mock.local/";
 
 type ApiClientEnv = {
   API_URL?: string;
@@ -35,9 +38,11 @@ export function resolveApiBaseUrl(env: ApiClientEnv = process.env): string {
  * in a misconfigured environment fails with the error above.
  */
 export function getApiClient(): AxiosInstance {
+  const mock = isMock();
   apiClient ??= axios.create({
-    baseURL: resolveApiBaseUrl(),
+    baseURL: mock ? MOCK_API_URL : resolveApiBaseUrl(),
     timeout: REQUEST_TIMEOUT_MS,
+    adapter: mock ? mockAdapter : undefined,
   });
 
   return apiClient;
