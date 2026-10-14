@@ -70,15 +70,29 @@ fixos em memória e nenhuma requisição sai do servidor para o backend real.
 
 ### Como ligar
 
-Só liga com o valor exato `release` (nunca por padrão):
+Só liga com o valor exato `release` (nunca por padrão). Há duas opções:
+
+**1. Pelo arquivo `.env`** (ou `.env.local`), e depois os scripts normais:
 
 ```bash
-yarn dev:release                       # desenvolvimento
-yarn build:release && yarn start:release  # build de produção
+# .env
+NODE_ENV=release          # ou NEXT_PUBLIC_APP_ENV=release
 ```
 
-`NEXT_PUBLIC_APP_ENV` é embutida no build, então o `start:release` precisa de um
-build feito com `build:release`. `API_URL` não é necessária nesse modo.
+```bash
+yarn dev                  # desenvolvimento
+yarn build && yarn start  # produção
+```
+
+**2. Pelos scripts de release**, sem mexer no `.env`:
+
+```bash
+yarn dev:release
+yarn build:release && yarn start:release
+```
+
+`API_URL` não é necessária nesse modo. A flag é embutida no build: depois de
+mudar o `.env`, rode o build de novo.
 
 ### O que é mockado
 
@@ -106,19 +120,16 @@ preservados no hot reload. Reiniciar o servidor volta aos valores iniciais.
 
 ### Sobre `NODE_ENV=release`
 
-`isMock()` também aceita `NODE_ENV=release`, mas não é recomendado. No Next 15,
-`next dev`/`next build`/`next start` mantêm um `NODE_ENV` fora do padrão e
-exibem o aviso [non-standard-node-env](https://nextjs.org/docs/messages/non-standard-node-env).
-Porém `process.env.NODE_ENV` é substituído no código compilado por
-`development` ou `production`, então:
+O Next 15 define o `NODE_ENV` sozinho (`development` no `next dev`,
+`production` no build/start) **antes** de carregar os arquivos `.env`, então
+`NODE_ENV=release` escrito no `.env` nunca chega a `process.env`. Ele também
+substitui `process.env.NODE_ENV` no código compilado. Por isso o
+`next.config.ts` lê a flag direto dos arquivos `.env*` (`src/mock/release-env.ts`)
+e embute `NEXT_PUBLIC_APP_ENV=release` para o servidor e o navegador.
 
-- no servidor, `isMock()` lê o `NODE_ENV` do ambiente em tempo de execução e
-  liga o mock;
-- no navegador o valor nunca chega: sem faixa e sem bloqueio do socket por
-  essa via;
-- React e outras dependências podem misturar comportamento de dev e produção.
-
-Prefira sempre `NEXT_PUBLIC_APP_ENV=release`.
+Passar `NODE_ENV=release` na linha de comando também funciona, mas o Next
+mostra o aviso [non-standard-node-env](https://nextjs.org/docs/messages/non-standard-node-env).
+Prefira o `.env` ou os scripts `*:release`.
 
 ## Learn More
 
