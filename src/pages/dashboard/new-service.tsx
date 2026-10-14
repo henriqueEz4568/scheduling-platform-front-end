@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { ServiceSummary } from "@/components/service-summary";
+import { getAppLayout } from "@/components/app-layout";
 import { apiFetch } from "@/lib/client/api-fetch";
 import { createServiceSchema } from "@/lib/schemas/service";
 import { getFirstIssueMessage } from "@/lib/schemas/utils";
@@ -237,3 +238,5 @@ export default function NewServicePage() {
     </div>
   );
 }
+
+NewServicePage.getLayout = getAppLayout;

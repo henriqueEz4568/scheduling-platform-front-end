@@ -14,6 +14,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Table } from "@/components/table";
+import { getAppLayout } from "@/components/app-layout";
 import { apiFetch } from "@/lib/client/api-fetch";
 import { formatCurrency, formatDateTime } from "@/utils";
 import type {
@@ -196,3 +197,5 @@ export default function BookingsPage() {
     </div>
   );
 }
+
+BookingsPage.getLayout = getAppLayout;

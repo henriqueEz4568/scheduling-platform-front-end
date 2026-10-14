@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactElement } from "react";
 import Link from "next/link";
 import Cookies from "js-cookie";
 import { io } from "socket.io-client";
@@ -26,11 +26,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { handleUnauthorizedRedirect } from "@/lib/client/auth";
+import type { AppLayoutProps } from "@/types/layout";
 import type { AuthUser } from "@/types/user";
-
-type AppLayoutProps = {
-  children: ReactNode;
-};
 
 export function AppLayout({ children }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -202,4 +199,9 @@ export function AppLayout({ children }: AppLayoutProps) {
       ) : null}
     </div>
   );
+}
+
+/** getLayout for pages under /dashboard. */
+export function getAppLayout(page: ReactElement) {
+  return <AppLayout>{page}</AppLayout>;
 }

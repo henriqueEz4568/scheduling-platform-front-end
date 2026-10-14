@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { CustomerSelect } from "@/components/customer-select";
 import { AppointmentSummary } from "@/components/appointment-summary";
+import { getAppLayout } from "@/components/app-layout";
 import { apiFetch } from "@/lib/client/api-fetch";
 import { createBookingSchema } from "@/lib/schemas/booking";
 import { getFirstIssueMessage } from "@/lib/schemas/utils";
@@ -460,3 +461,5 @@ export default function NewAppointmentPage() {
     </div>
   );
 }
+
+NewAppointmentPage.getLayout = getAppLayout;
