@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import type { AxiosError } from "axios";
-import { api } from "./index";
+import { getApiClient } from "@/lib/server/api-client";
 import { extractAuthToken } from "@/lib/server/auth";
 
 export default async function handler(
@@ -23,7 +23,7 @@ export default async function handler(
   }
 
   try {
-    const response = await api.get("/customers", {
+    const response = await getApiClient().get("/customers", {
       headers: {
         Authorization: `Bearer ${token}`,
       },

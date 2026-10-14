@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { NextApiRequest, NextApiResponse } from "next";
 import { serialize } from "cookie";
-import { api } from "../api";
+import { getApiClient } from "@/lib/server/api-client";
 import { AuthUser } from "@/types/user";
 
 const ONE_WEEK = 60 * 60 * 24 * 7;
@@ -18,7 +18,7 @@ export default async function handler(
 
   try {
     const { email, password } = req.body ?? {};
-    const { data } = await api.post("/auth/login", { email, password });
+    const { data } = await getApiClient().post("/auth/login", { email, password });
 
     if (!data?.success) {
       return res.status(401).json({

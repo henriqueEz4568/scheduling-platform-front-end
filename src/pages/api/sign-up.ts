@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { isAxiosError } from "axios";
-import { api } from "./index";
+import { getApiClient } from "@/lib/server/api-client";
 
 export default async function handler(
   req: NextApiRequest,
@@ -14,7 +14,7 @@ export default async function handler(
 
   try {
     const { name, email, password, role } = req.body ?? {};
-    const { data } = await api.post("/auth/sign_up", {
+    const { data } = await getApiClient().post("/auth/sign_up", {
       name,
       email,
       password,
