@@ -1,37 +1,46 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { NextApiRequest, NextApiResponse } from "next";
 import { serialize } from "cookie";
 import { getApiClient } from "@/lib/server/api-client";
-import { AuthUser } from "@/types/user";
+import { AUTH_COOKIE_NAME } from "@/lib/server/auth";
+import {
+  describeError,
+  mapBackendError,
+  sendError,
+  sendMethodNotAllowed,
+} from "@/lib/server/proxy-handler";
+import type { LoginBackendResponse } from "@/types/auth";
 
 const ONE_WEEK = 60 * 60 * 24 * 7;
+const INVALID_CREDENTIALS_MESSAGE = "Invalid email or password.";
+const LOGIN_FAILED_MESSAGE = "Unable to sign in right now. Please try again.";
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
   if (req.method !== "POST") {
-    return res
-      .status(405)
-      .json({ success: false, error: "Method not allowed" });
+    return sendMethodNotAllowed(res, ["POST"]);
   }
 
   try {
     const { email, password } = req.body ?? {};
-    const { data } = await getApiClient().post("/auth/login", { email, password });
+    const { data } = await getApiClient().post<LoginBackendResponse>(
+      "/auth/login",
+      { email, password }
+    );
 
     if (!data?.success) {
-      return res.status(401).json({
-        success: false,
-        message: data?.message ?? "error while doing login",
-      });
+      return sendError(res, 401, data?.message ?? INVALID_CREDENTIALS_MESSAGE);
     }
 
-    const user: AuthUser | null = data?.user ?? null;
+    if (!data.token) {
+      console.error("API /login error: backend answered without a token");
+      return sendError(res, 502, LOGIN_FAILED_MESSAGE);
+    }
 
     res.setHeader(
       "Set-Cookie",
-      serialize("token", data.token, {
+      serialize(AUTH_COOKIE_NAME, data.token, {
         httpOnly: true,
         sameSite: "lax",
         secure: process.env.NODE_ENV === "production",
@@ -43,13 +52,18 @@ export default async function handler(
     return res.status(200).json({
       success: true,
       message: "Login OK",
-      user,
+      user: data.user ?? null,
     });
-  } catch (err: any) {
-    console.error("API /login error:", err);
-    return res.status(500).json({
-      success: false,
-      message: err.message || "Internal server error",
+  } catch (error) {
+    const { status, message } = mapBackendError(error, {
+      fallbackMessage: LOGIN_FAILED_MESSAGE,
+      statusMessages: { 401: INVALID_CREDENTIALS_MESSAGE },
     });
+
+    if (status >= 500) {
+      console.error("API /login error:", describeError(error));
+    }
+
+    return sendError(res, status, message);
   }
 }

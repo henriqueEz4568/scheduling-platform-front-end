@@ -5,3 +5,10 @@ export type LoginApiResponse = {
   message?: string;
   user?: AuthUser | null;
 };
+
+export type LoginBackendResponse = {
+  success?: boolean;
+  message?: string;
+  token?: string;
+  user?: AuthUser | null;
+};
