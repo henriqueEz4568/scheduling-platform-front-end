@@ -1,3 +1,6 @@
+import type { z } from "zod";
+import type { createServiceSchema } from "@/lib/schemas/service";
+
 export type CreateServiceFormValues = {
   name: string;
   duration: string;
@@ -20,3 +23,5 @@ export type CreatedService = {
   };
   created: string;
 };
+
+export type CreateServicePayload = z.input<typeof createServiceSchema>;

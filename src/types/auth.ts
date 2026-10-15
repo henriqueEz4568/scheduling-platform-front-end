@@ -5,3 +5,15 @@ export type LoginApiResponse = {
   message?: string;
   user?: AuthUser | null;
 };
+
+export type LoginBackendResponse = {
+  success?: boolean;
+  message?: string;
+  token?: string;
+  user?: AuthUser | null;
+};
+
+/** Decoded (unverified) JWT payload. */
+export type JwtPayload = Record<string, unknown> & {
+  exp?: unknown;
+};

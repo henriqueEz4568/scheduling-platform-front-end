@@ -18,7 +18,6 @@ export function RegisterForm({
   isSubmitting,
   onSubmit,
   loginPath = "/",
-  roleValue = "admin",
   showPassword,
   showConfirmPassword,
   onTogglePassword,
@@ -51,8 +50,6 @@ export function RegisterForm({
 
           <CardContent>
             <form onSubmit={onSubmit} className="space-y-4">
-              <input type="hidden" {...register("role")} value={roleValue} />
-
               <div className="space-y-2">
                 <Label htmlFor="name">Nome</Label>
                 <div className="relative">

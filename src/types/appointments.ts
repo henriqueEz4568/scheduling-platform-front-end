@@ -1,3 +1,6 @@
+import type { z } from "zod";
+import type { createBookingSchema } from "@/lib/schemas/booking";
+
 export type Customer = {
   id: string | number;
   name: string;
@@ -72,3 +75,5 @@ export type ScheduleFormValues = {
   customerEmail: string;
   customerPhone: string;
 };
+
+export type CreateBookingPayload = z.input<typeof createBookingSchema>;

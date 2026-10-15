@@ -1,57 +1,14 @@
-import type { NextApiRequest, NextApiResponse } from "next";
-import type { AxiosError } from "axios";
-import { api } from "./index";
-import { extractAuthToken } from "@/lib/server/auth";
+import { createServiceSchema } from "@/lib/schemas/service";
+import { createProxyHandler } from "@/lib/server/proxy-handler";
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  if (req.method !== "GET" && req.method !== "POST") {
-    return res.status(405).json({
-      success: false,
-      message: "Method not allowed",
-    });
-  }
-
-  const token = extractAuthToken(req);
-  if (!token) {
-    return res.status(401).json({
-      success: false,
-      message: "Authentication token not provided.",
-    });
-  }
-
-  try {
-    if (req.method === "GET") {
-      const response = await api.get("/services", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      return res.status(200).json(response.data);
-    }
-
-    const response = await api.post("/services", req.body, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    return res.status(201).json(response.data);
-  } catch (error) {
-    const axiosError = error as AxiosError<{ message?: string }>;
-    const status = axiosError.response?.status ?? 500;
-    const message =
-      axiosError.response?.data?.message ||
-      (req.method === "POST"
-        ? "Unable to create service."
-        : "Unable to load services.");
-
-    return res.status(status).json({
-      success: false,
-      message,
-    });
-  }
-}
+export default createProxyHandler({
+  GET: {
+    path: "/services",
+    errorMessage: "Unable to load services.",
+  },
+  POST: {
+    path: "/services",
+    bodySchema: createServiceSchema,
+    errorMessage: "Unable to create service.",
+  },
+});
