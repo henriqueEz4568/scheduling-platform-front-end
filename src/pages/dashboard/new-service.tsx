@@ -26,6 +26,7 @@ import type {
   CreatedService,
 } from "@/types/services";
 import type { ApiErrorResponse } from "@/types/api";
+import { useTranslation } from "@/i18n/use-translation";
 
 const defaultValues: CreateServiceFormValues = {
   name: "",
@@ -35,6 +36,7 @@ const defaultValues: CreateServiceFormValues = {
 };
 
 export default function NewServicePage() {
+  const { t, tm } = useTranslation();
   const [createdService, setCreatedService] = useState<CreatedService | null>(
     null,
   );
@@ -68,7 +70,7 @@ export default function NewServicePage() {
 
     const parsedPayload = createServiceSchema.safeParse(servicePayload);
     if (!parsedPayload.success) {
-      setSubmitError(getFirstIssueMessage(parsedPayload.error));
+      setSubmitError(tm(getFirstIssueMessage(parsedPayload.error)));
       return;
     }
 
@@ -86,7 +88,7 @@ export default function NewServicePage() {
       );
 
       if (!response.ok) {
-        throw new Error(data?.message ?? "Unable to create service.");
+        throw new Error(tm(data?.message) || t("newService.createError"));
       }
 
       setCreatedService(data);
@@ -95,7 +97,7 @@ export default function NewServicePage() {
       console.error("Error creating service", error);
       setCreatedService(null);
       const message =
-        error instanceof Error ? error.message : "Unable to create service.";
+        error instanceof Error ? error.message : t("newService.createError");
       setSubmitError(message);
     }
   };
@@ -107,18 +109,17 @@ export default function NewServicePage() {
           <div className="space-y-3 text-center lg:text-left flex-1 min-w-[250px]">
             <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 text-primary px-4 py-2 text-sm font-semibold uppercase tracking-wide">
               <Sparkles className="h-4 w-4" />
-              Novo Serviço
+              {t("newService.badge")}
             </div>
             <h1 className="text-4xl font-bold text-foreground">
-              Cadastre um serviço
+              {t("newService.title")}
             </h1>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto lg:mx-0">
-              Defina nome, duração e valor para disponibilizar seus serviços com
-              um visual moderno e pronto para ser agendado pelos seus clientes.
+              {t("newService.description")}
             </p>
           </div>
           <Button variant="outline" className="self-start" asChild>
-            <Link href="/dashboard">Voltar para o dashboard</Link>
+            <Link href="/dashboard">{t("common.backToDashboard")}</Link>
           </Button>
         </div>
 
@@ -126,20 +127,18 @@ export default function NewServicePage() {
           <Card className="border-none shadow-xl">
             <CardHeader className="space-y-3">
               <CardTitle className="text-2xl font-semibold">
-                Informações do serviço
+                {t("newService.cardTitle")}
               </CardTitle>
-              <CardDescription>
-                Preencha os campos abaixo para criar um novo serviço.
-              </CardDescription>
+              <CardDescription>{t("newService.cardDescription")}</CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Nome do serviço</Label>
+                  <Label htmlFor="name">{t("newService.name")}</Label>
                   <Input
                     id="name"
-                    placeholder="Ex: Corte premium com finalização"
-                    {...register("name", { required: "O nome é obrigatório." })}
+                    placeholder={t("newService.namePlaceholder")}
+                    {...register("name", { required: t("newService.nameRequired") })}
                   />
                   {errors.name && (
                     <p className="text-sm text-destructive">
@@ -150,7 +149,7 @@ export default function NewServicePage() {
 
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label htmlFor="duration">Duração (minutos)</Label>
+                    <Label htmlFor="duration">{t("newService.duration")}</Label>
                     <Input
                       id="duration"
                       type="number"
@@ -158,7 +157,7 @@ export default function NewServicePage() {
                       step={5}
                       placeholder="45"
                       {...register("duration", {
-                        required: "Informe a duração estimada.",
+                        required: t("newService.durationRequired"),
                       })}
                     />
                     {errors.duration && (
@@ -168,7 +167,7 @@ export default function NewServicePage() {
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="price">Preço (R$)</Label>
+                    <Label htmlFor="price">{t("newService.price")}</Label>
                     <Input
                       id="price"
                       type="number"
@@ -176,7 +175,7 @@ export default function NewServicePage() {
                       step={5}
                       placeholder="120"
                       {...register("price", {
-                        required: "Defina um valor para o serviço.",
+                        required: t("newService.priceRequired"),
                       })}
                     />
                     {errors.price && (
@@ -188,12 +187,14 @@ export default function NewServicePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="description">Descrição</Label>
+                  <Label htmlFor="description">
+                    {t("newService.descriptionLabel")}
+                  </Label>
                   <textarea
                     id="description"
                     rows={4}
                     className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    placeholder="Conte os diferenciais, materiais usados ou qualquer detalhe importante."
+                    placeholder={t("newService.descriptionPlaceholder")}
                     {...register("description")}
                   />
                 </div>
@@ -209,7 +210,7 @@ export default function NewServicePage() {
                   className="w-full h-12 text-base font-semibold"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? "Cadastrando..." : "Cadastrar serviço"}
+                  {isSubmitting ? t("newService.submitting") : t("newService.submit")}
                 </Button>
               </form>
             </CardContent>
@@ -224,11 +225,10 @@ export default function NewServicePage() {
                   <Wand2 className="h-8 w-8 text-primary" />
                 </div>
                 <CardTitle className="text-2xl font-semibold text-foreground">
-                  O resumo aparecerá aqui
+                  {t("newService.placeholderTitle")}
                 </CardTitle>
                 <CardDescription>
-                  Assim que o serviço for criado, você verá todos os detalhes e
-                  poderá compartilhar com a sua equipe.
+                  {t("newService.placeholderDescription")}
                 </CardDescription>
               </CardHeader>
             </Card>

@@ -23,7 +23,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { useRealtime } from "@/hooks/use-realtime";
+import { useTranslation } from "@/i18n/use-translation";
 import { handleUnauthorizedRedirect } from "@/lib/client/auth";
 import type { AppLayoutProps } from "@/types/layout";
 import type { AuthUser } from "@/types/user";
@@ -32,6 +34,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [authUser, setAuthUser] = useState<AuthUser | null>(null);
   const { enabled: realtimeEnabled, notifications } = useRealtime();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -51,8 +54,8 @@ export function AppLayout({ children }: AppLayoutProps) {
     }
   }, []);
 
-  const displayName = authUser?.name?.trim() || "Usuario";
-  const displayEmail = authUser?.email || "sem-email";
+  const displayName = authUser?.name?.trim() || t("layout.defaultUserName");
+  const displayEmail = authUser?.email || t("layout.noEmail");
   const avatarFallback = displayName
     .split(" ")
     .filter(Boolean)
@@ -70,22 +73,33 @@ export function AppLayout({ children }: AppLayoutProps) {
               size="sm"
               onClick={() => setSidebarOpen(!sidebarOpen)}
               className="lg:hidden"
+              aria-label={t("layout.toggleMenu")}
             >
               <Menu className="h-5 w-5" />
             </Button>
 
-            <Link href="/dashboard" className="flex items-center space-x-2">
+            <Link
+              href="/dashboard"
+              className="flex items-center space-x-2"
+              aria-label={t("common.appName")}
+            >
               <div className="rounded-lg bg-primary p-2">
                 <Calendar className="h-6 w-6 text-primary-foreground" />
               </div>
-              <span className="text-xl font-bold text-foreground">
-                SchedulePro
+              <span className="hidden text-xl font-bold text-foreground sm:inline">
+                {t("common.appName")}
               </span>
             </Link>
           </div>
 
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="sm" className="relative">
+          <div className="flex items-center space-x-2 sm:space-x-4">
+            <LanguageSwitcher />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="relative"
+              aria-label={t("layout.notifications")}
+            >
               <Bell className="h-5 w-5" />
               {realtimeEnabled ? (
                 <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-xs text-destructive-foreground">
@@ -99,11 +113,12 @@ export function AppLayout({ children }: AppLayoutProps) {
                 <Button
                   variant="ghost"
                   className="relative h-8 w-8 rounded-full"
+                  aria-label={t("layout.userMenu")}
                 >
                   <Avatar className="h-8 w-8">
                     <AvatarImage
                       src="/placeholder.svg?height=32&width=32"
-                      alt="User"
+                      alt={displayName}
                     />
                     <AvatarFallback>{avatarFallback || "U"}</AvatarFallback>
                   </Avatar>
@@ -123,16 +138,16 @@ export function AppLayout({ children }: AppLayoutProps) {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
                   <User className="mr-2 h-4 w-4" />
-                  <span>Profile</span>
+                  <span>{t("layout.profile")}</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <Settings className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
+                  <span>{t("layout.settings")}</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => handleUnauthorizedRedirect("/")}>
                   <LogOut className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
+                  <span>{t("layout.logout")}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -150,24 +165,24 @@ export function AppLayout({ children }: AppLayoutProps) {
             <Button variant="ghost" className="w-full justify-start" asChild>
               <Link href="/dashboard/bookings">
                 <Calendar className="mr-2 h-4 w-4" />
-                Bookings
+                {t("layout.nav.bookings")}
               </Link>
             </Button>
             <Button variant="ghost" className="w-full justify-start">
               <Users className="mr-2 h-4 w-4" />
-              Customers
+              {t("layout.nav.customers")}
             </Button>
             <Button variant="ghost" className="w-full justify-start">
               <Settings className="mr-2 h-4 w-4" />
-              Services
+              {t("layout.nav.services")}
             </Button>
             <Button variant="ghost" className="w-full justify-start">
               <BarChart3 className="mr-2 h-4 w-4" />
-              Reports
+              {t("layout.nav.reports")}
             </Button>
             <Button variant="ghost" className="w-full justify-start">
               <Settings className="mr-2 h-4 w-4" />
-              Settings
+              {t("layout.nav.settings")}
             </Button>
           </nav>
         </aside>

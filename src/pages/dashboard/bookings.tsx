@@ -16,24 +16,27 @@ import {
 import { Table } from "@/components/table";
 import { getAppLayout } from "@/components/app-layout";
 import { apiFetch } from "@/lib/client/api-fetch";
-import { formatCurrency, formatDateTime } from "@/utils";
+import { useTranslation } from "@/i18n/use-translation";
 import type {
   BookingsListResponse,
   CreatedAppointment,
 } from "@/types/appointments";
 import type { ApiErrorResponse } from "@/types/api";
+import type { UseTranslationResult } from "@/types/i18n";
 import type { TableColumn, TableRow } from "@/types/table";
 
-const bookingColumns: TableColumn[] = [
-  { key: "id", header: "ID" },
-  { key: "customerName", header: "Cliente" },
-  { key: "customerEmail", header: "Email" },
-  { key: "serviceName", header: "Serviço" },
-  { key: "start", header: "Início" },
-  { key: "end", header: "Fim" },
-  { key: "status", header: "Status" },
-  { key: "paymentStatus", header: "Pagamento" },
-  { key: "price", header: "Valor", align: "right" },
+const getBookingColumns = (
+  t: UseTranslationResult["t"],
+): TableColumn[] => [
+  { key: "id", header: t("bookings.columns.id") },
+  { key: "customerName", header: t("bookings.columns.customer") },
+  { key: "customerEmail", header: t("bookings.columns.email") },
+  { key: "serviceName", header: t("bookings.columns.service") },
+  { key: "start", header: t("bookings.columns.start") },
+  { key: "end", header: t("bookings.columns.end") },
+  { key: "status", header: t("bookings.columns.status") },
+  { key: "paymentStatus", header: t("bookings.columns.payment") },
+  { key: "price", header: t("bookings.columns.price"), align: "right" },
 ];
 
 const readApiJson = async <T,>(response: Response) => {
@@ -44,7 +47,13 @@ const readApiJson = async <T,>(response: Response) => {
   }
 };
 
-const toTableRows = (bookings: CreatedAppointment[]): TableRow[] => {
+const toTableRows = (
+  bookings: CreatedAppointment[],
+  { tm, formatCurrency, formatDateTime }: UseTranslationResult,
+): TableRow[] => {
+  const translateStatus = (name?: string) =>
+    name ? tm(`status.${name}`).replace(/^status\./, "") : "-";
+
   return bookings.map((booking) => ({
     id: booking.id ?? "-",
     customerName: booking.customer?.name ?? "-",
@@ -52,13 +61,15 @@ const toTableRows = (bookings: CreatedAppointment[]): TableRow[] => {
     serviceName: booking.service?.name ?? "-",
     start: formatDateTime(booking.start),
     end: formatDateTime(booking.end),
-    status: booking.status?.name ?? "-",
-    paymentStatus: booking.paymentStatus?.name ?? "-",
+    status: translateStatus(booking.status?.name),
+    paymentStatus: translateStatus(booking.paymentStatus?.name),
     price: formatCurrency(booking.service?.price),
   }));
 };
 
 export default function BookingsPage() {
+  const i18n = useTranslation();
+  const { t, tm } = i18n;
   const [bookings, setBookings] = useState<CreatedAppointment[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [limit, setLimit] = useState(15);
@@ -67,7 +78,8 @@ export default function BookingsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const tableRows = useMemo(() => toTableRows(bookings), [bookings]);
+  const tableRows = useMemo(() => toTableRows(bookings, i18n), [bookings, i18n]);
+  const bookingColumns = useMemo(() => getBookingColumns(t), [t]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -90,7 +102,7 @@ export default function BookingsPage() {
         );
 
         if (!response.ok) {
-          throw new Error(data?.message ?? "Unable to load bookings.");
+          throw new Error(tm(data?.message) || t("bookings.loadError"));
         }
 
         setBookings(data.bookings ?? []);
@@ -106,7 +118,7 @@ export default function BookingsPage() {
         setTotalRows(0);
         setTotalPages(1);
         setError(
-          error instanceof Error ? error.message : "Unable to load bookings.",
+          error instanceof Error ? error.message : t("bookings.loadError"),
         );
       } finally {
         if (!controller.signal.aborted) {
@@ -120,7 +132,7 @@ export default function BookingsPage() {
     return () => {
       controller.abort();
     };
-  }, [currentPage, limit]);
+  }, [currentPage, limit, t, tm]);
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -129,24 +141,22 @@ export default function BookingsPage() {
           <div>
             <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
               <CalendarDays className="h-4 w-4" />
-              Agendamentos
+              {t("bookings.section")}
             </div>
             <h1 className="text-3xl font-bold text-foreground">
-              Lista de bookings
+              {t("bookings.title")}
             </h1>
-            <p className="text-muted-foreground">
-              Acompanhe os agendamentos retornados pela API.
-            </p>
+            <p className="text-muted-foreground">{t("bookings.description")}</p>
           </div>
 
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" asChild>
-              <Link href="/dashboard">Dashboard</Link>
+              <Link href="/dashboard">{t("common.dashboard")}</Link>
             </Button>
             <Button asChild>
               <Link href="/dashboard/new-appointment">
                 <Plus className="h-4 w-4" />
-                Novo agendamento
+                {t("bookings.newAppointment")}
               </Link>
             </Button>
           </div>
@@ -154,9 +164,9 @@ export default function BookingsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Bookings</CardTitle>
+            <CardTitle>{t("bookings.cardTitle")}</CardTitle>
             <CardDescription>
-              Página {currentPage} com até {limit} registros por busca.
+              {t("bookings.cardDescription", { page: currentPage, limit })}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -168,7 +178,7 @@ export default function BookingsPage() {
 
             {isLoading ? (
               <p className="text-sm text-muted-foreground">
-                Carregando bookings...
+                {t("bookings.loading")}
               </p>
             ) : null}
 

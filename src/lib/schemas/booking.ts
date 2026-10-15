@@ -1,8 +1,8 @@
 import { z } from "zod";
+import { messageKey } from "@/i18n/translate";
 
-const INVALID_DATES_MESSAGE = "Please provide valid start and end dates.";
-const CUSTOMER_FIELDS_MESSAGE =
-  "Please fill in name, email, and phone for the customer.";
+const INVALID_DATES_MESSAGE = messageKey("validation.invalidDates");
+const CUSTOMER_FIELDS_MESSAGE = messageKey("validation.customerFields");
 
 const dateTimeSchema = z.iso.datetime({
   offset: true,
@@ -15,7 +15,7 @@ const newCustomerSchema = z.object({
     .string()
     .trim()
     .min(1, CUSTOMER_FIELDS_MESSAGE)
-    .email("Please provide a valid customer email."),
+    .email(messageKey("validation.customerEmail")),
   phone: z.string().trim().min(1, CUSTOMER_FIELDS_MESSAGE),
 });
 
@@ -27,15 +27,15 @@ export const createBookingSchema = z
   .object({
     start: dateTimeSchema,
     end: dateTimeSchema,
-    serviceId: z.string().trim().min(1, "Please select a service."),
-    customerId: z.string().trim().min(1, "Please pick a customer.").optional(),
+    serviceId: z.string().trim().min(1, messageKey("validation.serviceRequired")),
+    customerId: z.string().trim().min(1, messageKey("validation.customerRequired")).optional(),
     customer: newCustomerSchema.optional(),
   })
   .superRefine((booking, ctx) => {
     if (new Date(booking.end) <= new Date(booking.start)) {
       ctx.addIssue({
         code: "custom",
-        message: "End date must be after start date.",
+        message: messageKey("validation.endAfterStart"),
         path: ["end"],
       });
     }
@@ -45,7 +45,7 @@ export const createBookingSchema = z
     if (hasExistingCustomer === hasNewCustomer) {
       ctx.addIssue({
         code: "custom",
-        message: "Provide either an existing customer or a new customer.",
+        message: messageKey("validation.customerChoice"),
         path: ["customer"],
       });
     }

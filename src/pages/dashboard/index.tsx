@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { AuthUser } from "@/types/user";
+import { useTranslation } from "@/i18n/use-translation";
 
 // Mock data
 const todaysSchedule = [
@@ -107,6 +108,7 @@ const upcomingAppointments = [
 
 export default function DashboardPage() {
   const [authUser, setAuthUser] = useState<AuthUser | null>(null);
+  const { t, tm } = useTranslation();
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -126,7 +128,7 @@ export default function DashboardPage() {
     }
   }, []);
 
-  const displayName = authUser?.name?.trim() || "Usuario";
+  const displayName = authUser?.name?.trim() || t("layout.defaultUserName");
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -160,19 +162,19 @@ export default function DashboardPage() {
             {/* Welcome Header */}
             <div>
               <h2 className="text-3xl font-bold text-foreground">
-                Welcome back, {displayName}!
+                {t("dashboard.welcome", { name: displayName })}
               </h2>
               <p className="text-muted-foreground">
-                Heres whats happening with your schedule today.
+                {t("dashboard.subtitle")}
               </p>
             </div>
 
             {/* Quick Actions + WebSocket Messages */}
             <Card>
               <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
+                <CardTitle>{t("dashboard.quickActionsTitle")}</CardTitle>
                 <CardDescription>
-                  Manage your schedule efficiently
+                  {t("dashboard.quickActionsDescription")}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -180,7 +182,7 @@ export default function DashboardPage() {
                   <Button className="flex items-center space-x-2" asChild>
                     <Link href="/dashboard/new-appointment">
                       <Plus className="h-4 w-4" />
-                      <span>New Appointment</span>
+                      <span>{t("dashboard.newAppointment")}</span>
                     </Link>
                   </Button>
                   <Button
@@ -190,7 +192,7 @@ export default function DashboardPage() {
                   >
                     <Link href="/dashboard/new-service">
                       <Sparkles className="h-4 w-4" />
-                      <span>New Service</span>
+                      <span>{t("dashboard.newService")}</span>
                     </Link>
                   </Button>
                   <Button
@@ -198,7 +200,7 @@ export default function DashboardPage() {
                     className="flex items-center space-x-2 bg-transparent"
                   >
                     <UserPlus className="h-4 w-4" />
-                    <span>Register Customer</span>
+                    <span>{t("dashboard.registerCustomer")}</span>
                   </Button>
                   <Button
                     variant="outline"
@@ -207,7 +209,7 @@ export default function DashboardPage() {
                   >
                     <Link href="/dashboard/bookings">
                       <FileText className="h-4 w-4" />
-                      <span>View Bookings</span>
+                      <span>{t("dashboard.viewBookings")}</span>
                     </Link>
                   </Button>
                 </div>
@@ -219,7 +221,7 @@ export default function DashboardPage() {
               <div className="lg:col-span-2">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Todays Schedule</CardTitle>
+                    <CardTitle>{t("dashboard.todaysSchedule")}</CardTitle>
                     <CardDescription>December 16, 2024</CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -248,9 +250,7 @@ export default function DashboardPage() {
                             )} flex items-center space-x-1`}
                           >
                             {getStatusIcon(appointment.status)}
-                            <span className="capitalize">
-                              {appointment.status}
-                            </span>
+                            <span>{tm(`status.${appointment.status}`)}</span>
                           </Badge>
                         </div>
                       ))}
@@ -263,8 +263,10 @@ export default function DashboardPage() {
               <div>
                 <Card>
                   <CardHeader>
-                    <CardTitle>Upcoming Appointments</CardTitle>
-                    <CardDescription>Next 5 bookings</CardDescription>
+                    <CardTitle>{t("dashboard.upcomingTitle")}</CardTitle>
+                    <CardDescription>
+                      {t("dashboard.upcomingDescription")}
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">

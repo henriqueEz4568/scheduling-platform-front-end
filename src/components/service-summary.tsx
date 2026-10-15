@@ -8,18 +8,14 @@ import {
 } from "./ui/card";
 import { Badge } from "./ui/badge";
 import type { CreatedService } from "@/types/services";
+import { useTranslation } from "@/i18n/use-translation";
 
 type ServiceSummaryProps = {
   service: CreatedService;
 };
 
-const currencyFormatter = new Intl.NumberFormat("pt-BR", {
-  style: "currency",
-  currency: "BRL",
-});
-
 export function ServiceSummary({ service }: ServiceSummaryProps) {
-  const createdAt = new Date(service.created);
+  const { t, formatCurrency, formatDateTime } = useTranslation();
 
   return (
     <Card className="border-none shadow-2xl bg-gradient-to-br from-primary/10 via-background to-background">
@@ -29,11 +25,11 @@ export function ServiceSummary({ service }: ServiceSummaryProps) {
             <CardTitle className="text-2xl font-bold text-foreground">
               {service.name}
             </CardTitle>
-            <CardDescription>
-              Serviço criado com sucesso e pronto para ser agendado.
-            </CardDescription>
+            <CardDescription>{t("serviceSummary.description")}</CardDescription>
           </div>
-          <Badge className="px-4 py-1 text-sm">ID #{service.dbId}</Badge>
+          <Badge className="px-4 py-1 text-sm">
+            {t("serviceSummary.id", { id: service.dbId })}
+          </Badge>
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -41,34 +37,33 @@ export function ServiceSummary({ service }: ServiceSummaryProps) {
           <div className="p-4 rounded-2xl bg-background/80 border shadow-inner flex items-center gap-3">
             <Timer className="h-10 w-10 text-primary" />
             <div>
-              <p className="text-sm text-muted-foreground">Duração</p>
-              <p className="text-lg font-semibold">{service.duration} min</p>
+              <p className="text-sm text-muted-foreground">
+                {t("serviceSummary.duration")}
+              </p>
+              <p className="text-lg font-semibold">
+                {t("common.minutes", { count: service.duration })}
+              </p>
             </div>
           </div>
           <div className="p-4 rounded-2xl bg-background/80 border shadow-inner flex items-center gap-3">
             <Wallet className="h-10 w-10 text-primary" />
             <div>
-              <p className="text-sm text-muted-foreground">Valor</p>
+              <p className="text-sm text-muted-foreground">
+                {t("serviceSummary.price")}
+              </p>
               <p className="text-lg font-semibold">
-                {currencyFormatter.format(service.price)}
+                {formatCurrency(service.price)}
               </p>
             </div>
           </div>
           <div className="p-4 rounded-2xl bg-background/80 border shadow-inner flex items-center gap-3">
             <CalendarClock className="h-10 w-10 text-primary" />
             <div>
-              <p className="text-sm text-muted-foreground">Criado em</p>
+              <p className="text-sm text-muted-foreground">
+                {t("serviceSummary.createdAt")}
+              </p>
               <p className="text-lg font-semibold">
-                {createdAt.toLocaleDateString("pt-BR", {
-                  day: "2-digit",
-                  month: "short",
-                  year: "numeric",
-                })}{" "}
-                às{" "}
-                {createdAt.toLocaleTimeString("pt-BR", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
+                {formatDateTime(service.created)}
               </p>
             </div>
           </div>
@@ -76,17 +71,19 @@ export function ServiceSummary({ service }: ServiceSummaryProps) {
 
         <div className="rounded-2xl border bg-background/80 p-5 space-y-3">
           <p className="text-sm uppercase tracking-wide text-muted-foreground">
-            Descrição
+            {t("serviceSummary.descriptionLabel")}
           </p>
           <p className="text-base leading-relaxed text-foreground">
-            {service.description?.trim() || "Nenhuma descrição adicional."}
+            {service.description?.trim() || t("serviceSummary.noDescription")}
           </p>
         </div>
 
         <div className="rounded-2xl border bg-background/80 p-5 flex flex-wrap items-center gap-4">
           <UserCheck className="h-10 w-10 text-primary" />
           <div>
-            <p className="text-sm text-muted-foreground">Responsável</p>
+            <p className="text-sm text-muted-foreground">
+              {t("serviceSummary.owner")}
+            </p>
             <p className="font-semibold text-lg">{service.user.name}</p>
             <p className="text-sm text-muted-foreground">
               {service.user.email} • {service.user.role}
