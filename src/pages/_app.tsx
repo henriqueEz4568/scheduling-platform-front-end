@@ -31,7 +31,7 @@ export default function App({ Component, pageProps }: AppPropsWithLayout) {
   return (
     <>
       {getLayout(<Component {...pageProps} />)}
-      {/* NEXT_PUBLIC_APP_ENV is inlined at build time: same output on server and client. */}
+      {/* NEXT_PUBLIC_NODE_ENV is inlined at build time: same output on server and client. */}
       {isMockClient() ? <MockBanner /> : null}
     </>
   );

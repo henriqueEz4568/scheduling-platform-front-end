@@ -35,6 +35,7 @@ Veja `.env.example`.
 | `SIGNUP_DEFAULT_ROLE`          | servidor    | Papel das contas criadas em `/register` (padrão `admin`). O navegador não escolhe o papel. |
 | `NEXT_PUBLIC_REALTIME_ENABLED` | navegador   | `true` para ligar as notificações em tempo real. |
 | `NEXT_PUBLIC_REALTIME_URL`     | navegador   | URL do servidor socket.io. |
+| `NEXT_PUBLIC_NODE_ENV`         | servidor e navegador | `production` chama o backend real; `release` liga o modo com dados fictícios (veja abaixo). |
 
 > `NEXT_PUBLIC_API_URL` não é mais usada: renomeie para `API_URL`.
 
@@ -64,19 +65,26 @@ desligado. O socket é desconectado no logout.
 Permite testar o app **sem backend**: o BFF (`src/pages/api`) responde com dados
 fixos em memória e nenhuma requisição sai do servidor para o backend real.
 
-> ⚠️ **Nunca defina `NEXT_PUBLIC_APP_ENV=release` nem `NODE_ENV=release` em
-> produção.** Nesse modo o login aceita **qualquer** e-mail e senha (bypass de
-> autenticação).
+O modo é escolhido pela variável `NEXT_PUBLIC_NODE_ENV`:
+
+| `NEXT_PUBLIC_NODE_ENV` | Comportamento |
+| ---------------------- | ------------- |
+| `production` (ou vazia) | chama o backend real em `API_URL` |
+| `release`              | dados fictícios (mock), sem backend |
+
+> ⚠️ **Nunca use `NEXT_PUBLIC_NODE_ENV=release` em produção.** Nesse modo o
+> login aceita **qualquer** e-mail e senha (bypass de autenticação).
+
+Não confunda com `NODE_ENV`: esse é definido pelo próprio Next (`development`
+no `yarn dev`, `production` no build/start) e não precisa estar no `.env`.
 
 ### Como ligar
 
-Só liga com o valor exato `release` (nunca por padrão). Há duas opções:
-
-**1. Pelo arquivo `.env`** (ou `.env.local`), e depois os scripts normais:
+**1. Pelo `.env`** (ou `.env.local`), e depois os scripts normais:
 
 ```bash
 # .env
-NODE_ENV=release          # ou NEXT_PUBLIC_APP_ENV=release
+NEXT_PUBLIC_NODE_ENV=release
 ```
 
 ```bash
@@ -91,8 +99,8 @@ yarn dev:release
 yarn build:release && yarn start:release
 ```
 
-`API_URL` não é necessária nesse modo. A flag é embutida no build: depois de
-mudar o `.env`, rode o build de novo.
+`API_URL` não é necessária nesse modo. Como toda `NEXT_PUBLIC_*`, o valor é
+embutido no build: depois de mudar, rode o build de novo.
 
 ### O que é mockado
 
@@ -117,19 +125,6 @@ fictícios" aparece no rodapé.
 
 Os dados ficam em `globalThis.__mockDb`, compartilhados entre as rotas e
 preservados no hot reload. Reiniciar o servidor volta aos valores iniciais.
-
-### Sobre `NODE_ENV=release`
-
-O Next 15 define o `NODE_ENV` sozinho (`development` no `next dev`,
-`production` no build/start) **antes** de carregar os arquivos `.env`, então
-`NODE_ENV=release` escrito no `.env` nunca chega a `process.env`. Ele também
-substitui `process.env.NODE_ENV` no código compilado. Por isso o
-`next.config.ts` lê a flag direto dos arquivos `.env*` (`src/mock/release-env.ts`)
-e embute `NEXT_PUBLIC_APP_ENV=release` para o servidor e o navegador.
-
-Passar `NODE_ENV=release` na linha de comando também funciona, mas o Next
-mostra o aviso [non-standard-node-env](https://nextjs.org/docs/messages/non-standard-node-env).
-Prefira o `.env` ou os scripts `*:release`.
 
 ## Learn More
 

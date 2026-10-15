@@ -8,10 +8,10 @@ const api = axios.create({ baseURL: "http://mock.local/", adapter: mockAdapter }
 describe("isMock", () => {
   it("only turns on with the exact value 'release'", () => {
     expect(isMock({})).toBe(false);
-    expect(isMock({ NODE_ENV: "production" })).toBe(false);
-    expect(isMock({ NEXT_PUBLIC_APP_ENV: "Release" })).toBe(false);
-    expect(isMock({ NEXT_PUBLIC_APP_ENV: "release" })).toBe(true);
-    expect(isMock({ NODE_ENV: "release" })).toBe(true);
+    expect(isMock({ NEXT_PUBLIC_NODE_ENV: "production" })).toBe(false);
+    expect(isMock({ NEXT_PUBLIC_NODE_ENV: "Release" })).toBe(false);
+    expect(isMock({ NODE_ENV: "release" })).toBe(false);
+    expect(isMock({ NEXT_PUBLIC_NODE_ENV: "release" })).toBe(true);
   });
 });
 

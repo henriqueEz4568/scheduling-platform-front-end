@@ -4,11 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "dev:release": "cross-env NEXT_PUBLIC_APP_ENV=release next dev",
+    "dev:release": "cross-env NEXT_PUBLIC_NODE_ENV=release next dev",
     "build": "next build",
-    "build:release": "cross-env NEXT_PUBLIC_APP_ENV=release next build",
+    "build:release": "cross-env NEXT_PUBLIC_NODE_ENV=release next build",
     "start": "next start",
-    "start:release": "cross-env NEXT_PUBLIC_APP_ENV=release next start",
+    "start:release": "cross-env NEXT_PUBLIC_NODE_ENV=release next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
