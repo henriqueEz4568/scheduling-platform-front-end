@@ -62,7 +62,7 @@ describe("POST /api/sign-up", () => {
     });
 
     expect(res.statusCode).toBe(400);
-    expect(res.body).toEqual({ success: false, message: "Email invalido." });
+    expect(res.body).toEqual({ success: false, message: "validation.emailInvalid" });
     expect(post).not.toHaveBeenCalled();
   });
 

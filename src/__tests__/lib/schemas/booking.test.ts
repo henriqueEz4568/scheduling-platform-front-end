@@ -55,7 +55,7 @@ describe("createBookingSchema", () => {
   it("rejects invalid dates", () => {
     expect(
       firstMessage({ start: "", end, serviceId: "svc-1", customerId: "1" }),
-    ).toBe("Please provide valid start and end dates.");
+    ).toBe("validation.invalidDates");
     expect(
       firstMessage({
         start: "tomorrow",
@@ -63,18 +63,18 @@ describe("createBookingSchema", () => {
         serviceId: "svc-1",
         customerId: "1",
       }),
-    ).toBe("Please provide valid start and end dates.");
+    ).toBe("validation.invalidDates");
   });
 
   it("rejects an end that is not after the start", () => {
     expect(
       firstMessage({ start, end: start, serviceId: "svc-1", customerId: "1" }),
-    ).toBe("End date must be after start date.");
+    ).toBe("validation.endAfterStart");
   });
 
   it("requires a service", () => {
     expect(firstMessage({ start, end, serviceId: " ", customerId: "1" })).toBe(
-      "Please select a service.",
+      "validation.serviceRequired",
     );
   });
 
@@ -82,13 +82,13 @@ describe("createBookingSchema", () => {
     const customer = { name: "Ana", email: "ana@example.com", phone: "1" };
 
     expect(firstMessage({ start, end, serviceId: "svc-1" })).toBe(
-      "Provide either an existing customer or a new customer.",
+      "validation.customerChoice",
     );
     expect(
       firstMessage({ start, end, serviceId: "svc-1", customerId: "1", customer }),
-    ).toBe("Provide either an existing customer or a new customer.");
+    ).toBe("validation.customerChoice");
     expect(firstMessage({ start, end, serviceId: "svc-1", customerId: "" })).toBe(
-      "Please pick a customer.",
+      "validation.customerRequired",
     );
   });
 
@@ -100,7 +100,7 @@ describe("createBookingSchema", () => {
         serviceId: "svc-1",
         customer: { name: "", email: "ana@example.com", phone: "1" },
       }),
-    ).toBe("Please fill in name, email, and phone for the customer.");
+    ).toBe("validation.customerFields");
     expect(
       firstMessage({
         start,
@@ -108,6 +108,6 @@ describe("createBookingSchema", () => {
         serviceId: "svc-1",
         customer: { name: "Ana", email: "ana", phone: "1" },
       }),
-    ).toBe("Please provide a valid customer email.");
+    ).toBe("validation.customerEmail");
   });
 });

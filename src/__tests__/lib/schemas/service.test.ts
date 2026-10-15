@@ -39,7 +39,7 @@ describe("createServiceSchema", () => {
 
   it("requires a name", () => {
     expect(firstMessage({ ...validService, name: "   " })).toBe(
-      "Informe um nome para o serviço.",
+      "validation.serviceName",
     );
   });
 
@@ -47,14 +47,14 @@ describe("createServiceSchema", () => {
     "rejects duration %s",
     (duration) => {
       expect(firstMessage({ ...validService, duration })).toBe(
-        "Duração deve ser um número maior que zero.",
+        "validation.serviceDuration",
       );
     },
   );
 
   it.each([-1, Number.NaN, "120"])("rejects price %s", (price) => {
     expect(firstMessage({ ...validService, price })).toBe(
-      "Preço deve ser um valor válido.",
+      "validation.servicePrice",
     );
   });
 });

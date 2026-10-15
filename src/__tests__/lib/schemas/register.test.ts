@@ -35,7 +35,7 @@ describe("registerSchema", () => {
     expect(result.success).toBe(false);
     expect(result.error?.issues[0]).toMatchObject({
       path: ["confirmPassword"],
-      message: "As senhas nao conferem.",
+      message: "validation.passwordMismatch",
     });
   });
 
@@ -48,7 +48,7 @@ describe("registerSchema", () => {
 
     expect(result.success).toBe(false);
     expect(result.error?.issues[0].message).toBe(
-      "A senha deve ter pelo menos 8 caracteres.",
+      "validation.passwordMin",
     );
   });
 });
@@ -79,6 +79,6 @@ describe("signUpPayloadSchema", () => {
     });
 
     expect(result.success).toBe(false);
-    expect(result.error?.issues[0].message).toBe("Email invalido.");
+    expect(result.error?.issues[0].message).toBe("validation.emailInvalid");
   });
 });
