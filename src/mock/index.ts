@@ -11,18 +11,14 @@ export { isMockClient };
 const RELEASE = "release";
 
 /**
- * Release mode (fixed in-memory data, no backend). Only the exact value
- * "release" turns it on. Server only: NODE_ENV is read from the runtime
- * environment object because Next inlines `process.env.NODE_ENV` in bundles.
+ * Release mode (fixed in-memory data, no backend): only when
+ * NEXT_PUBLIC_NODE_ENV is exactly "release". Any other value ("production",
+ * empty...) calls the real backend at API_URL.
  */
 export function isMock(
   env: Record<string, string | undefined> = process.env,
 ): boolean {
-  return (
-    isMockClient() ||
-    env.NEXT_PUBLIC_APP_ENV === RELEASE ||
-    env.NODE_ENV === RELEASE
-  );
+  return isMockClient() || env.NEXT_PUBLIC_NODE_ENV === RELEASE;
 }
 
 function parseBody(data: unknown): Record<string, unknown> {
