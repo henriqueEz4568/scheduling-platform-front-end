@@ -13,29 +13,10 @@ import {
   CardTitle,
 } from "./ui/card";
 import type { CreatedAppointment } from "@/types/appointments";
-import { formatDateTime } from "@/lib/utils";
+import { useTranslation } from "@/i18n/use-translation";
 
 type AppointmentSummaryProps = {
   appointment: CreatedAppointment;
-};
-
-const currencyFormatter = new Intl.NumberFormat("pt-BR", {
-  style: "currency",
-  currency: "BRL",
-});
-
-const safeFormatDateTime = (value?: string) => {
-  if (!value) {
-    return null;
-  }
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return null;
-  }
-
-  return formatDateTime(value);
 };
 
 const hasText = (value?: string | number | null) => {
@@ -43,8 +24,15 @@ const hasText = (value?: string | number | null) => {
 };
 
 export function AppointmentSummary({ appointment }: AppointmentSummaryProps) {
-  const start = safeFormatDateTime(appointment.start);
-  const end = safeFormatDateTime(appointment.end);
+  const { t, tm, formatCurrency, formatDateTime } = useTranslation();
+  const formatOptionalDateTime = (value?: string) => {
+    const formatted = formatDateTime(value);
+    return formatted === "-" ? null : formatted;
+  };
+  const translateStatus = (name?: string) =>
+    name ? tm(`status.${name}`).replace(/^status\./, "") : "";
+  const start = formatOptionalDateTime(appointment.start);
+  const end = formatOptionalDateTime(appointment.end);
   const service = appointment.service;
   const customer = appointment.customer;
   const professional = service?.user;
@@ -72,14 +60,16 @@ export function AppointmentSummary({ appointment }: AppointmentSummaryProps) {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <CardTitle className="text-2xl">
-              Agendamento criado com sucesso
+              {t("appointmentSummary.title")}
             </CardTitle>
             <CardDescription>
-              Resumo completo do agendamento retornado pela API.
+              {t("appointmentSummary.description")}
             </CardDescription>
           </div>
           {hasText(appointment.id) ? (
-            <Badge className="px-3 py-1">ID {appointment.id}</Badge>
+            <Badge className="px-3 py-1">
+              {t("appointmentSummary.id", { id: appointment.id ?? "" })}
+            </Badge>
           ) : null}
         </div>
       </CardHeader>
@@ -91,16 +81,22 @@ export function AppointmentSummary({ appointment }: AppointmentSummaryProps) {
               <div className="rounded-xl border bg-background/80 p-4 space-y-3">
                 <p className="text-sm text-muted-foreground flex items-center gap-2">
                   <CalendarClock className="h-4 w-4" />
-                  Horario
+                  {t("appointmentSummary.schedule")}
                 </p>
                 {start ? (
                   <p className="text-sm">
-                    <span className="font-semibold">Inicio:</span> {start}
+                    <span className="font-semibold">
+                      {t("appointmentSummary.start")}
+                    </span>{" "}
+                    {start}
                   </p>
                 ) : null}
                 {end ? (
                   <p className="text-sm">
-                    <span className="font-semibold">Fim:</span> {end}
+                    <span className="font-semibold">
+                      {t("appointmentSummary.end")}
+                    </span>{" "}
+                    {end}
                   </p>
                 ) : null}
               </div>
@@ -110,18 +106,22 @@ export function AppointmentSummary({ appointment }: AppointmentSummaryProps) {
               <div className="rounded-xl border bg-background/80 p-4 space-y-3">
                 <p className="text-sm text-muted-foreground flex items-center gap-2">
                   <ClipboardCheck className="h-4 w-4" />
-                  Status
+                  {t("appointmentSummary.status")}
                 </p>
                 {hasText(appointment.status?.name) ? (
                   <p className="text-sm">
-                    <span className="font-semibold">Agendamento:</span>{" "}
-                    {appointment.status?.name}
+                    <span className="font-semibold">
+                      {t("appointmentSummary.booking")}
+                    </span>{" "}
+                    {translateStatus(appointment.status?.name)}
                   </p>
                 ) : null}
                 {hasText(appointment.paymentStatus?.name) ? (
                   <p className="text-sm">
-                    <span className="font-semibold">Pagamento:</span>{" "}
-                    {appointment.paymentStatus?.name}
+                    <span className="font-semibold">
+                      {t("appointmentSummary.payment")}
+                    </span>{" "}
+                    {translateStatus(appointment.paymentStatus?.name)}
                   </p>
                 ) : null}
               </div>
@@ -135,7 +135,7 @@ export function AppointmentSummary({ appointment }: AppointmentSummaryProps) {
               <div className="rounded-xl border bg-background/80 p-4 space-y-2">
                 <p className="text-sm text-muted-foreground flex items-center gap-2">
                   <CircleDollarSign className="h-4 w-4" />
-                  Servico
+                  {t("appointmentSummary.service")}
                 </p>
                 {hasText(service?.name) ? (
                   <p className="font-semibold">{service?.name}</p>
@@ -144,14 +144,14 @@ export function AppointmentSummary({ appointment }: AppointmentSummaryProps) {
                 typeof service?.price === "number" ? (
                   <p className="text-sm">
                     {typeof service.duration === "number"
-                      ? `${service.duration} min`
+                      ? t("common.minutes", { count: service.duration })
                       : null}
                     {typeof service.duration === "number" &&
                     typeof service.price === "number"
                       ? " • "
                       : null}
                     {typeof service.price === "number"
-                      ? currencyFormatter.format(service.price)
+                      ? formatCurrency(service.price)
                       : null}
                   </p>
                 ) : null}
@@ -164,7 +164,7 @@ export function AppointmentSummary({ appointment }: AppointmentSummaryProps) {
                 hasText(professional?.email) ||
                 hasText(professional?.role) ? (
                   <p className="text-xs text-muted-foreground">
-                    Profissional:{" "}
+                    {t("appointmentSummary.professional")}{" "}
                     {[professional?.name, professional?.email, professional?.role]
                       .filter(hasText)
                       .join(" - ")}
@@ -177,7 +177,7 @@ export function AppointmentSummary({ appointment }: AppointmentSummaryProps) {
               <div className="rounded-xl border bg-background/80 p-4 space-y-2">
                 <p className="text-sm text-muted-foreground flex items-center gap-2">
                   <UserRound className="h-4 w-4" />
-                  Cliente
+                  {t("appointmentSummary.customer")}
                 </p>
                 {hasText(customer?.name) ? (
                   <p className="font-semibold">{customer?.name}</p>

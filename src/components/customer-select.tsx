@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useTranslation } from "@/i18n/use-translation";
 import { cn } from "@/lib/utils";
 
 export type CustomerOption = {
@@ -30,6 +31,7 @@ export function CustomerSelect({
   onChange,
   loading = false,
 }: CustomerSelectProps) {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [focusIndex, setFocusIndex] = useState(0);
@@ -155,10 +157,10 @@ export function CustomerSelect({
     if (!filteredCustomers.length) {
       return (
         <div className="h-full flex flex-col items-center justify-center text-center text-muted-foreground">
-          <p className="text-sm font-medium">No customers found</p>
-          <p className="text-xs">
-            Try searching by name, email, or phone number.
+          <p className="text-sm font-medium">
+            {t("customerSelect.emptyTitle")}
           </p>
+          <p className="text-xs">{t("customerSelect.emptyHint")}</p>
         </div>
       );
     }
@@ -220,14 +222,14 @@ export function CustomerSelect({
     <div className="space-y-4" aria-live="polite">
       <div className="space-y-2">
         <Label htmlFor="customer-search" className="sr-only">
-          Search customers
+          {t("customerSelect.search")}
         </Label>
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             id="customer-search"
-            placeholder="Search customers"
-            aria-label="Search customers"
+            placeholder={t("customerSelect.search")}
+            aria-label={t("customerSelect.search")}
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             className="pl-10"
@@ -235,8 +237,12 @@ export function CustomerSelect({
         </div>
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <span>
-            {filteredCustomers.length}{" "}
-            {filteredCustomers.length === 1 ? "customer" : "customers"}
+            {t(
+              filteredCustomers.length === 1
+                ? "customerSelect.countOne"
+                : "customerSelect.countOther",
+              { count: filteredCustomers.length },
+            )}
           </span>
           {selectedCustomer && (
             <Button
@@ -246,7 +252,7 @@ export function CustomerSelect({
               className="h-7 px-2"
               onClick={() => onChange(null)}
             >
-              Clear
+              {t("customerSelect.clear")}
             </Button>
           )}
         </div>
@@ -261,7 +267,7 @@ export function CustomerSelect({
         )}
         role="listbox"
         tabIndex={0}
-        aria-label="Customer list"
+        aria-label={t("customerSelect.listLabel")}
         aria-activedescendant={
           filteredCustomers[focusIndex]
             ? `customer-option-${filteredCustomers[focusIndex].id}`
@@ -273,7 +279,7 @@ export function CustomerSelect({
       </div>
 
       <p className="text-xs text-muted-foreground italic">
-        Tip: search by name, email or phone.
+        {t("customerSelect.tip")}
       </p>
     </div>
   );

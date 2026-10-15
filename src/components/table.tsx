@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/i18n/use-translation";
 import { cn } from "@/lib/utils";
 import type { TableProps } from "@/types/table";
 
@@ -26,6 +27,7 @@ export function Table({
   setLimit,
   onPageChange,
 }: TableProps) {
+  const { t } = useTranslation();
   const isPreviousDisabled = currentPage <= 1;
   const isNextDisabled = currentPage >= totalPages;
 
@@ -82,7 +84,7 @@ export function Table({
                   colSpan={columns.length || 1}
                   className="px-4 py-8 text-center text-muted-foreground"
                 >
-                  Nenhum registro encontrado.
+                  {t("table.empty")}
                 </td>
               </tr>
             )}
@@ -93,14 +95,17 @@ export function Table({
       <div className="flex flex-col gap-3 border-t bg-background px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <p className="text-sm text-muted-foreground">
-            Página{" "}
+            {t("table.page")}{" "}
             <span className="font-medium text-foreground">{currentPage}</span>{" "}
-            de <span className="font-medium text-foreground">{totalPages}</span>
-            <span className="ml-2">({totalRows} registros)</span>
+            {t("table.of")}{" "}
+            <span className="font-medium text-foreground">{totalPages}</span>
+            <span className="ml-2">
+              {t("table.records", { count: totalRows })}
+            </span>
           </p>
 
           <label className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span>Itens por página</span>
+            <span>{t("table.perPage")}</span>
             <select
               value={limit}
               onChange={(event) => setLimit(Number(event.target.value))}
@@ -123,7 +128,7 @@ export function Table({
             disabled={isPreviousDisabled}
             onClick={() => onPageChange(currentPage - 1)}
           >
-            Anterior
+            {t("table.previous")}
           </Button>
           <Button
             type="button"
@@ -132,7 +137,7 @@ export function Table({
             disabled={isNextDisabled}
             onClick={() => onPageChange(currentPage + 1)}
           >
-            Próxima
+            {t("table.next")}
           </Button>
         </div>
       </div>

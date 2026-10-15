@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/router";
 import { RegisterForm } from "@/components/register-form";
 import { registerSchema } from "@/lib/schemas/register";
+import { useTranslation } from "@/i18n/use-translation";
 import type {
   RegisterApiResponse,
   RegisterFormFields,
@@ -13,6 +14,7 @@ import type {
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { t, tm } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const { register, handleSubmit, formState, setError } =
@@ -40,7 +42,7 @@ export default function RegisterPage() {
 
       const data: RegisterApiResponse = await response.json();
       if (!response.ok || !data?.success) {
-        const errorMessage = data?.message ?? "Erro ao criar conta.";
+        const errorMessage = tm(data?.message) || t("register.error");
         const isEmailConflict = /email/i.test(errorMessage);
 
         if (isEmailConflict) {
@@ -59,14 +61,11 @@ export default function RegisterPage() {
       }
 
       return { success: true };
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Internal server error";
-
+    } catch {
       return {
         success: false,
         field: "root",
-        message,
+        message: t("common.genericError"),
       };
     }
   };
@@ -77,7 +76,7 @@ export default function RegisterPage() {
     const result = await submitRegister(formValues);
     if (!result.success) {
       setError(result.field ?? "root", {
-        message: result.message ?? "Erro ao criar conta.",
+        message: result.message ?? t("register.error"),
       });
       return;
     }

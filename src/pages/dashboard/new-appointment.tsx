@@ -29,6 +29,7 @@ import { apiFetch } from "@/lib/client/api-fetch";
 import { createBookingSchema } from "@/lib/schemas/booking";
 import { getFirstIssueMessage } from "@/lib/schemas/utils";
 import { toIsoDateTime } from "@/utils";
+import { useTranslation } from "@/i18n/use-translation";
 import type {
   CreateBookingPayload,
   CreatedAppointment,
@@ -40,6 +41,7 @@ import type { ApiErrorResponse } from "@/types/api";
 
 export default function NewAppointmentPage() {
   const router = useRouter();
+  const { t, tm, formatCurrency } = useTranslation();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [customerMode, setCustomerMode] = useState<"existing" | "new">("new");
@@ -66,15 +68,6 @@ export default function NewAppointmentPage() {
 
   const selectedCustomerId = watch("existingCustomerId");
   const selectedServiceId = watch("serviceId");
-  const currencyFormatter = useMemo(
-    () =>
-      new Intl.NumberFormat("pt-BR", {
-        style: "currency",
-        currency: "BRL",
-      }),
-    [],
-  );
-
   const selectedCustomer = useMemo(() => {
     return customers.find(
       (customer) => String(customer.id) === selectedCustomerId,
@@ -107,7 +100,9 @@ export default function NewAppointmentPage() {
         >(response);
 
         if (!response.ok) {
-          throw new Error(data?.message ?? "Unable to load customers.");
+          throw new Error(
+            tm(data?.message) || t("newAppointment.loadCustomersError"),
+          );
         }
 
         setCustomers(data?.customers ?? []);
@@ -118,7 +113,9 @@ export default function NewAppointmentPage() {
         console.error("Error loading customers", error);
         setCustomers([]);
         const message =
-          error instanceof Error ? error.message : "Unable to load customers.";
+          error instanceof Error
+            ? error.message
+            : t("newAppointment.loadCustomersError");
         setCustomersError(message);
       } finally {
         if (!controller.signal.aborted) {
@@ -132,7 +129,7 @@ export default function NewAppointmentPage() {
     return () => {
       controller.abort();
     };
-  }, []);
+  }, [t, tm]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -152,7 +149,9 @@ export default function NewAppointmentPage() {
         >(response);
 
         if (!response.ok) {
-          throw new Error(data?.message ?? "Unable to load services.");
+          throw new Error(
+            tm(data?.message) || t("newAppointment.loadServicesError"),
+          );
         }
 
         setServices(data?.services ?? []);
@@ -163,7 +162,9 @@ export default function NewAppointmentPage() {
         console.error("Error loading services", error);
         setServices([]);
         const message =
-          error instanceof Error ? error.message : "Unable to load services.";
+          error instanceof Error
+            ? error.message
+            : t("newAppointment.loadServicesError");
         setServicesError(message);
       } finally {
         if (!controller.signal.aborted) {
@@ -177,7 +178,7 @@ export default function NewAppointmentPage() {
     return () => {
       controller.abort();
     };
-  }, []);
+  }, [t, tm]);
 
   useEffect(() => {
     if (customers.length && !selectedCustomerId) {
@@ -218,7 +219,7 @@ export default function NewAppointmentPage() {
 
     const parsedPayload = createBookingSchema.safeParse(bookingPayload);
     if (!parsedPayload.success) {
-      setSubmitError(getFirstIssueMessage(parsedPayload.error));
+      setSubmitError(tm(getFirstIssueMessage(parsedPayload.error)));
       return;
     }
 
@@ -238,7 +239,9 @@ export default function NewAppointmentPage() {
         response,
       );
       if (!response.ok) {
-        throw new Error(data?.message ?? "Unable to create schedule.");
+        throw new Error(
+          tm(data?.message) || t("newAppointment.createError"),
+        );
       }
 
       setCreatedAppointment(data);
@@ -252,7 +255,9 @@ export default function NewAppointmentPage() {
       console.error("Error creating schedule", error);
       setCreatedAppointment(null);
       setSubmitError(
-        error instanceof Error ? error.message : "Unable to create schedule.",
+        error instanceof Error
+          ? error.message
+          : t("newAppointment.createError"),
       );
     }
   };
@@ -263,14 +268,14 @@ export default function NewAppointmentPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
-              Create New Appointment
+              {t("newAppointment.title")}
             </h1>
             <p className="text-muted-foreground">
-              Fill the details below to schedule a service.
+              {t("newAppointment.description")}
             </p>
           </div>
           <Button variant="outline" asChild>
-            <Link href="/dashboard">Back to Dashboard</Link>
+            <Link href="/dashboard">{t("common.backToDashboard")}</Link>
           </Button>
         </div>
 
@@ -279,9 +284,9 @@ export default function NewAppointmentPage() {
         ) : (
           <Card>
             <CardHeader>
-              <CardTitle>Schedule Details</CardTitle>
+              <CardTitle>{t("newAppointment.cardTitle")}</CardTitle>
               <CardDescription>
-                Provide the time, service, and customer information.
+                {t("newAppointment.cardDescription")}
               </CardDescription>
             </CardHeader>
 
@@ -289,7 +294,7 @@ export default function NewAppointmentPage() {
               <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="start">Start</Label>
+                    <Label htmlFor="start">{t("newAppointment.start")}</Label>
                     <Input
                       id="start"
                       type="datetime-local"
@@ -297,7 +302,7 @@ export default function NewAppointmentPage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="end">End</Label>
+                    <Label htmlFor="end">{t("newAppointment.end")}</Label>
                     <Input
                       id="end"
                       type="datetime-local"
@@ -307,7 +312,7 @@ export default function NewAppointmentPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="serviceId">Service</Label>
+                  <Label htmlFor="serviceId">{t("newAppointment.service")}</Label>
                   <Input
                     id="serviceId"
                     type="hidden"
@@ -327,8 +332,8 @@ export default function NewAppointmentPage() {
                       <SelectValue
                         placeholder={
                           servicesLoading
-                            ? "Loading services..."
-                            : "No services available"
+                            ? t("newAppointment.loadingServices")
+                            : t("newAppointment.noServices")
                         }
                       />
                     </SelectTrigger>
@@ -336,7 +341,7 @@ export default function NewAppointmentPage() {
                       {services.map((service) => (
                         <SelectItem key={service.id} value={service.id}>
                           {service.name} -{" "}
-                          {currencyFormatter.format(service.price)}
+                          {formatCurrency(service.price)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -348,7 +353,7 @@ export default function NewAppointmentPage() {
 
                 <div className="space-y-4">
                   <Label className="text-base font-semibold">
-                    Customer Information
+                    {t("newAppointment.customerInfo")}
                   </Label>
                   <div className="flex flex-wrap gap-4">
                     <Button
@@ -359,20 +364,22 @@ export default function NewAppointmentPage() {
                       onClick={() => setCustomerMode("existing")}
                       disabled={!customers.length || customersLoading}
                     >
-                      Select existing
+                      {t("newAppointment.selectExisting")}
                     </Button>
                     <Button
                       type="button"
                       variant={customerMode === "new" ? "default" : "outline"}
                       onClick={() => setCustomerMode("new")}
                     >
-                      Register new
+                      {t("newAppointment.registerNew")}
                     </Button>
                   </div>
 
                   {customerMode === "existing" && (
                     <div className="space-y-2">
-                      <Label htmlFor="existingCustomerId">Customer</Label>
+                      <Label htmlFor="existingCustomerId">
+                        {t("newAppointment.customer")}
+                      </Label>
                       <Input
                         id="existingCustomerId"
                         type="hidden"
@@ -401,27 +408,29 @@ export default function NewAppointmentPage() {
                   {customerMode === "new" && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <Label htmlFor="customerName">Full name</Label>
+                        <Label htmlFor="customerName">
+                          {t("newAppointment.fullName")}
+                        </Label>
                         <Input
                           id="customerName"
-                          placeholder="Customer name"
+                          placeholder={t("newAppointment.customerNamePlaceholder")}
                           {...register("customerName", { required: true })}
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="customerEmail">Email</Label>
+                        <Label htmlFor="customerEmail">{t("common.email")}</Label>
                         <Input
                           id="customerEmail"
                           type="email"
-                          placeholder="customer@email.com"
+                          placeholder={t("newAppointment.customerEmailPlaceholder")}
                           {...register("customerEmail", { required: true })}
                         />
                       </div>
                       <div className="space-y-2 md:col-span-2">
-                        <Label htmlFor="customerPhone">Phone</Label>
+                        <Label htmlFor="customerPhone">{t("common.phone")}</Label>
                         <Input
                           id="customerPhone"
-                          placeholder="+55 11 99999-0000"
+                          placeholder={t("newAppointment.phonePlaceholder")}
                           {...register("customerPhone", { required: true })}
                         />
                       </div>
@@ -442,15 +451,15 @@ export default function NewAppointmentPage() {
                     className="min-w-[160px]"
                   >
                     {formState.isSubmitting
-                      ? "Creating..."
-                      : "Create appointment"}
+                      ? t("newAppointment.submitting")
+                      : t("newAppointment.submit")}
                   </Button>
                   <Button
                     variant="ghost"
                     type="button"
                     onClick={() => router.push("/dashboard")}
                   >
-                    Cancel
+                    {t("common.cancel")}
                   </Button>
                 </div>
               </form>

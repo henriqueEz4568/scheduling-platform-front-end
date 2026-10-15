@@ -19,9 +19,12 @@ import { useRouter } from "next/router";
 import { FormFields, loginSchema } from "@/lib/schemas/login";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { LoginApiResponse } from "@/types/auth";
+import { LanguageSwitcher } from "@/components/language-switcher";
+import { useTranslation } from "@/i18n/use-translation";
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
+  const { t, tm } = useTranslation();
   const { register, handleSubmit, formState, setError } = useForm<FormFields>({
     defaultValues: {},
     resolver: zodResolver(loginSchema),
@@ -47,15 +50,18 @@ export default function LoginPage() {
         }
         router.push("/dashboard");
       } else {
-        const errorMessage = data?.message ?? "Internal Server Error";
+        const errorMessage =
+          res.status === 401
+            ? t("login.invalidCredentials")
+            : tm(data?.message) || t("common.genericError");
         setError("password", {
           message: errorMessage,
         });
       }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
-      const message = error?.message ? error?.message : "Internal Server Error";
-      console.error("Login error:", message);
+      console.error("Login error:", error?.message);
+      const message = t("common.genericError");
       setError("root", {
         message,
       });
@@ -64,7 +70,8 @@ export default function LoginPage() {
     }
   };
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center p-4">
+    <div className="relative min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center p-4">
+      <LanguageSwitcher className="absolute right-4 top-4" />
       <div className="w-full max-w-md">
         {/* Logo and Header */}
         <div className="text-center mb-8">
@@ -74,40 +81,34 @@ export default function LoginPage() {
             </div>
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-2">
-            SchedulePro
+            {t("common.appName")}
           </h1>
-          <p className="text-muted-foreground">
-            Intelligent Scheduling Platform
-          </p>
+          <p className="text-muted-foreground">{t("login.tagline")}</p>
         </div>
 
         <Card className="shadow-lg border-0 bg-card/95 backdrop-blur">
           <CardHeader className="space-y-1 text-center">
             <CardTitle className="text-2xl font-semibold">
-              Welcome back
+              {t("login.title")}
             </CardTitle>
-            <CardDescription>
-              Sign in to your account to continue
-            </CardDescription>
+            <CardDescription>{t("login.description")}</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email address</Label>
+                <Label htmlFor="email">{t("login.emailLabel")}</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
-                    {...register("email", {
-                      required: "Email is required",
-                    })}
+                    {...register("email")}
                     id="email"
                     //  type="email"
-                    placeholder="Enter your email"
+                    placeholder={t("login.emailPlaceholder")}
                     className="pl-10 h-12"
                   />
                   {formState.errors.email && (
                     <p className="text-red-500 text-sm mt-1">
-                      {formState.errors.email.message}
+                      {tm(formState.errors.email.message)}
                     </p>
                   )}
                 </div>
@@ -116,28 +117,31 @@ export default function LoginPage() {
               {/* Password Field */}
               <div className="space-y-2">
                 <Label htmlFor="password" className="text-sm font-medium">
-                  Password
+                  {t("login.passwordLabel")}
                 </Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
-                    {...register("password", {
-                      required: "Password is required",
-                    })}
+                    {...register("password")}
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Enter your password"
+                    placeholder={t("login.passwordPlaceholder")}
                     className="pl-10 pr-10 h-12"
                   />
 
                   {formState.errors.password && (
                     <p className="text-red-500 text-sm mt-1">
-                      {formState.errors.password.message}
+                      {tm(formState.errors.password.message)}
                     </p>
                   )}
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
+                    aria-label={
+                      showPassword
+                        ? t("common.hidePassword")
+                        : t("common.showPassword")
+                    }
                     className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors"
                   >
                     {showPassword ? (
@@ -165,7 +169,7 @@ export default function LoginPage() {
                 className="w-full h-12 text-base font-medium"
                 disabled={formState?.isSubmitting}
               >
-                {formState?.isSubmitting ? "Signing in..." : "Sign in"}
+                {formState?.isSubmitting ? t("login.submitting") : t("login.submit")}
               </Button>
               {formState.errors?.root?.message && (
                 <p className="text-red-500 text-sm mt-1">
@@ -180,7 +184,7 @@ export default function LoginPage() {
                 href="/register"
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
-                Don&apos;t have an account?
+                {t("login.noAccount")}
               </Link>
             </div>
 
