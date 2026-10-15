@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { describe, expect, it } from "vitest";
 import { config, middleware } from "@/middleware";
+import { DEFAULT_LOCALE, LOCALES } from "@/i18n/config";
 import { createJwt, secondsFromNow } from "./helpers/jwt";
 
 const validToken = createJwt({ sub: "1", exp: secondsFromNow(3600) });
@@ -79,5 +80,37 @@ describe("middleware", () => {
 
     expect(response.headers.get("location")).toBeNull();
     expect(response.headers.get("set-cookie")).toMatch(/^token=;/);
+  });
+
+  describe("with i18n routing", () => {
+    const nextConfig = {
+      i18n: { locales: [...LOCALES], defaultLocale: DEFAULT_LOCALE },
+    };
+
+    function runLocalized(path: string, token?: string) {
+      const headers = token ? { cookie: `token=${token}` } : undefined;
+      return middleware(
+        new NextRequest(`http://localhost:3000${path}`, { headers, nextConfig }),
+      );
+    }
+
+    it.each([
+      ["/en/dashboard", "/en"],
+      ["/es/dashboard/bookings", "/es"],
+      ["/dashboard", "/"],
+    ])("keeps the language when sending %s to the login", (path, target) => {
+      expect(redirectTarget(runLocalized(path))).toBe(target);
+    });
+
+    it.each([
+      ["/en/register", "/en/dashboard"],
+      ["/es", "/es/dashboard"],
+    ])("keeps the language when sending %s to the dashboard", (path, target) => {
+      expect(redirectTarget(runLocalized(path, validToken))).toBe(target);
+    });
+
+    it("lets guests open a localized login", () => {
+      expect(runLocalized("/en").headers.get("location")).toBeNull();
+    });
   });
 });
