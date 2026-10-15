@@ -126,6 +126,50 @@ fictícios" aparece no rodapé.
 Os dados ficam em `globalThis.__mockDb`, compartilhados entre as rotas e
 preservados no hot reload. Reiniciar o servidor volta aos valores iniciais.
 
+## Idiomas (i18n)
+
+A interface está em **português (pt-BR)**, **inglês (en)** e **espanhol (es)**,
+usando o roteamento de i18n nativo do Next.js (Pages Router), sem bibliotecas
+extras.
+
+| Idioma | URL de exemplo       |
+| ------ | -------------------- |
+| pt-BR  | `/dashboard` (padrão, sem prefixo) |
+| en     | `/en/dashboard`      |
+| es     | `/es/dashboard`      |
+
+- O seletor de idioma fica no header e nas telas de login e cadastro. A escolha
+  fica salva no cookie `NEXT_LOCALE`.
+- Na primeira visita a `/`, o Next usa o `Accept-Language` do navegador (ou o
+  cookie) para abrir o idioma certo.
+- As rotas `/api/*` não têm prefixo de idioma.
+- Datas e valores são formatados pelo idioma; os preços continuam em reais (R$).
+
+### Onde ficam os textos
+
+```
+src/i18n/
+  config.ts            idiomas suportados e idioma padrão
+  messages/pt-BR.ts    dicionário base
+  messages/en.ts
+  messages/es.ts
+  translate.ts         translate(), formatadores (sem React; usado também no servidor)
+  use-translation.ts   hook useTranslation() para os componentes
+```
+
+Para adicionar um texto, crie a chave em `pt-BR.ts` e depois em `en.ts` e
+`es.ts`: o TypeScript acusa erro se faltar a chave em algum idioma, e
+`src/__tests__/i18n` confere chaves e variáveis (`{name}`).
+
+```tsx
+const { t } = useTranslation();
+t("dashboard.welcome", { name: "Ana" }); // "Bem-vindo de volta, Ana!"
+```
+
+As mensagens de validação dos schemas zod (`src/lib/schemas`) são chaves
+(`validation.*`), traduzidas na tela com `tm()`. Mensagens que vêm do backend
+são exibidas como chegam.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
