@@ -42,7 +42,7 @@ export function Table({
                   key={column.key}
                   scope="col"
                   className={cn(
-                    "whitespace-nowrap bg-[#343335] px-4 py-3 font-semibold text-white",
+                    "whitespace-nowrap bg-primary px-4 py-3 font-semibold text-primary-foreground",
                     column.align === "center" && "text-center",
                     column.align === "right" && "text-right",
                     column.className,
@@ -60,7 +60,7 @@ export function Table({
                 <tr
                   key={rowIndex}
                   className={cn(
-                    "transition-colors hover:bg-muted/40",
+                    "transition-colors even:bg-muted/50 hover:bg-accent/60",
                     row.className,
                   )}
                 >

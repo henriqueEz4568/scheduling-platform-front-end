@@ -2,10 +2,12 @@
 
 import { useEffect, useState, type ReactElement } from "react";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import {
   BarChart3,
   Bell,
   Calendar,
+  LayoutDashboard,
   LogOut,
   Menu,
   Settings,
@@ -27,10 +29,17 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 import { useRealtime } from "@/hooks/use-realtime";
 import { useTranslation } from "@/i18n/use-translation";
 import { handleUnauthorizedRedirect } from "@/lib/client/auth";
+import { cn } from "@/lib/utils";
 import type { AppLayoutProps } from "@/types/layout";
 import type { AuthUser } from "@/types/user";
 
+const navItemClass =
+  "w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground";
+const activeNavItemClass =
+  "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm hover:bg-sidebar-primary hover:text-sidebar-primary-foreground";
+
 export function AppLayout({ children }: AppLayoutProps) {
+  const { pathname } = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [authUser, setAuthUser] = useState<AuthUser | null>(null);
   const { enabled: realtimeEnabled, notifications } = useRealtime();
@@ -120,7 +129,9 @@ export function AppLayout({ children }: AppLayoutProps) {
                       src="/placeholder.svg?height=32&width=32"
                       alt={displayName}
                     />
-                    <AvatarFallback>{avatarFallback || "U"}</AvatarFallback>
+                    <AvatarFallback className="bg-secondary font-semibold text-secondary-foreground">
+                      {avatarFallback || "U"}
+                    </AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
@@ -157,30 +168,55 @@ export function AppLayout({ children }: AppLayoutProps) {
 
       <div className="flex">
         <aside
-          className={`fixed z-40 min-h-screen w-64 border-r border-border bg-card transition-transform duration-300 lg:static lg:translate-x-0 ${
+          className={`fixed z-40 min-h-screen w-64 border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-transform duration-300 lg:static lg:translate-x-0 ${
             sidebarOpen ? "translate-x-0" : "-translate-x-full"
           }`}
         >
           <nav className="space-y-2 p-4">
-            <Button variant="ghost" className="w-full justify-start" asChild>
-              <Link href="/dashboard/bookings">
-                <Calendar className="mr-2 h-4 w-4" />
-                {t("layout.nav.bookings")}
-              </Link>
-            </Button>
-            <Button variant="ghost" className="w-full justify-start">
+            {[
+              {
+                href: "/dashboard",
+                label: t("common.dashboard"),
+                icon: LayoutDashboard,
+              },
+              {
+                href: "/dashboard/bookings",
+                label: t("layout.nav.bookings"),
+                icon: Calendar,
+              },
+            ].map(({ href, label, icon: Icon }) => {
+              const active = pathname === href;
+              return (
+                <Button
+                  key={href}
+                  variant="ghost"
+                  className={cn(navItemClass, active && activeNavItemClass)}
+                  asChild
+                >
+                  <Link
+                    href={href}
+                    aria-current={active ? "page" : undefined}
+                    onClick={() => setSidebarOpen(false)}
+                  >
+                    <Icon className="mr-2 h-4 w-4" />
+                    {label}
+                  </Link>
+                </Button>
+              );
+            })}
+            <Button variant="ghost" className={navItemClass}>
               <Users className="mr-2 h-4 w-4" />
               {t("layout.nav.customers")}
             </Button>
-            <Button variant="ghost" className="w-full justify-start">
+            <Button variant="ghost" className={navItemClass}>
               <Settings className="mr-2 h-4 w-4" />
               {t("layout.nav.services")}
             </Button>
-            <Button variant="ghost" className="w-full justify-start">
+            <Button variant="ghost" className={navItemClass}>
               <BarChart3 className="mr-2 h-4 w-4" />
               {t("layout.nav.reports")}
             </Button>
-            <Button variant="ghost" className="w-full justify-start">
+            <Button variant="ghost" className={navItemClass}>
               <Settings className="mr-2 h-4 w-4" />
               {t("layout.nav.settings")}
             </Button>

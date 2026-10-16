@@ -70,7 +70,7 @@ export default function LoginPage() {
     }
   };
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center p-4">
+    <div className="relative min-h-screen bg-gradient-to-br from-primary/15 via-background to-secondary/20 flex items-center justify-center p-4">
       <LanguageSwitcher className="absolute right-4 top-4" />
       <div className="w-full max-w-md">
         {/* Logo and Header */}
@@ -107,7 +107,7 @@ export default function LoginPage() {
                     className="pl-10 h-12"
                   />
                   {formState.errors.email && (
-                    <p className="text-red-500 text-sm mt-1">
+                    <p className="text-destructive text-sm mt-1">
                       {tm(formState.errors.email.message)}
                     </p>
                   )}
@@ -130,7 +130,7 @@ export default function LoginPage() {
                   />
 
                   {formState.errors.password && (
-                    <p className="text-red-500 text-sm mt-1">
+                    <p className="text-destructive text-sm mt-1">
                       {tm(formState.errors.password.message)}
                     </p>
                   )}
@@ -172,7 +172,7 @@ export default function LoginPage() {
                 {formState?.isSubmitting ? t("login.submitting") : t("login.submit")}
               </Button>
               {formState.errors?.root?.message && (
-                <p className="text-red-500 text-sm mt-1">
+                <p className="text-destructive text-sm mt-1">
                   {formState.errors.root.message}
                 </p>
               )}
