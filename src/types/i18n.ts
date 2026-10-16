@@ -32,4 +32,6 @@ export type UseTranslationResult = {
 
 export type LanguageSwitcherProps = {
   className?: string;
+  /** "sidebar" for dark brand surfaces such as the app header. */
+  variant?: "default" | "sidebar";
 };

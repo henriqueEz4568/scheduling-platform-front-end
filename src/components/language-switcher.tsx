@@ -7,7 +7,10 @@ import type { LanguageSwitcherProps } from "@/types/i18n";
 
 const ONE_YEAR_IN_SECONDS = 60 * 60 * 24 * 365;
 
-export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
+export function LanguageSwitcher({
+  className,
+  variant = "default",
+}: LanguageSwitcherProps) {
   const router = useRouter();
   const { locale, t } = useTranslation();
 
@@ -24,13 +27,24 @@ export function LanguageSwitcher({ className }: LanguageSwitcherProps) {
   };
 
   return (
-    <label className={cn("flex items-center gap-2 text-sm text-muted-foreground", className)}>
+    <label
+      className={cn(
+        "flex items-center gap-2 text-sm",
+        variant === "sidebar" ? "text-sidebar-foreground" : "text-muted-foreground",
+        className,
+      )}
+    >
       <Languages className="hidden h-4 w-4 sm:block" aria-hidden="true" />
       <select
         aria-label={t("common.language")}
         value={locale}
         onChange={(event) => changeLocale(event.target.value)}
-        className="h-9 rounded-md border border-input bg-background px-2 py-1 text-sm text-foreground shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+        className={cn(
+          "h-9 rounded-md border px-2 py-1 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50",
+          variant === "sidebar"
+            ? "border-sidebar-border bg-sidebar-accent text-sidebar-accent-foreground"
+            : "border-input bg-background text-foreground",
+        )}
       >
         {LOCALES.map((option) => (
           <option key={option} value={option} lang={option}>

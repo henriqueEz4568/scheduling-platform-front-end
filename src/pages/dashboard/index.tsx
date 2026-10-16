@@ -216,7 +216,7 @@ export default function DashboardPage() {
                       {todaysSchedule.map((appointment) => (
                         <div
                           key={appointment.id}
-                          className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors"
+                          className="flex flex-wrap items-center justify-between gap-2 p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors"
                         >
                           <div className="flex items-center space-x-4">
                             <div className="text-sm font-medium text-muted-foreground min-w-[80px]">

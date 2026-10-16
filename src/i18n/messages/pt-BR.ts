@@ -48,7 +48,8 @@ const ptBR = {
     error: "Erro ao criar conta.",
   },
   layout: {
-    toggleMenu: "Abrir menu",
+    openMenu: "Abrir menu",
+    closeMenu: "Fechar menu",
     notifications: "Notificações",
     userMenu: "Menu do usuário",
     defaultUserName: "Usuário",
@@ -58,10 +59,6 @@ const ptBR = {
     logout: "Sair",
     nav: {
       bookings: "Agendamentos",
-      customers: "Clientes",
-      services: "Serviços",
-      reports: "Relatórios",
-      settings: "Configurações",
     },
   },
   dashboard: {
@@ -86,12 +83,7 @@ const ptBR = {
     refunded: "Reembolsado",
   },
   bookings: {
-    section: "Agendamentos",
-    title: "Lista de agendamentos",
-    description: "Acompanhe os agendamentos retornados pela API.",
-    newAppointment: "Novo agendamento",
-    cardTitle: "Agendamentos",
-    cardDescription: "Página {page} com até {limit} registros por busca.",
+    title: "Agendamentos",
     loading: "Carregando agendamentos...",
     loadError: "Não foi possível carregar os agendamentos.",
     columns: {

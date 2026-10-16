@@ -50,7 +50,8 @@ const en: Messages = {
     error: "Unable to create the account.",
   },
   layout: {
-    toggleMenu: "Open menu",
+    openMenu: "Open menu",
+    closeMenu: "Close menu",
     notifications: "Notifications",
     userMenu: "User menu",
     defaultUserName: "User",
@@ -60,10 +61,6 @@ const en: Messages = {
     logout: "Log out",
     nav: {
       bookings: "Bookings",
-      customers: "Customers",
-      services: "Services",
-      reports: "Reports",
-      settings: "Settings",
     },
   },
   dashboard: {
@@ -88,12 +85,7 @@ const en: Messages = {
     refunded: "Refunded",
   },
   bookings: {
-    section: "Bookings",
-    title: "Bookings list",
-    description: "Track the bookings returned by the API.",
-    newAppointment: "New appointment",
-    cardTitle: "Bookings",
-    cardDescription: "Page {page} with up to {limit} records per request.",
+    title: "Bookings",
     loading: "Loading bookings...",
     loadError: "Unable to load bookings.",
     columns: {

@@ -1,238 +1,35 @@
-"use client";
-
 import { useEffect, useState, type ReactElement } from "react";
-import Link from "next/link";
-import { useRouter } from "next/router";
-import {
-  BarChart3,
-  Bell,
-  Calendar,
-  LayoutDashboard,
-  LogOut,
-  Menu,
-  Settings,
-  User,
-  Users,
-} from "lucide-react";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { LanguageSwitcher } from "@/components/language-switcher";
-import { useRealtime } from "@/hooks/use-realtime";
-import { useTranslation } from "@/i18n/use-translation";
-import { handleUnauthorizedRedirect } from "@/lib/client/auth";
-import { cn } from "@/lib/utils";
+import { AppHeader } from "@/components/app-header";
+import { AppSidebar } from "@/components/app-sidebar";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import type { AppLayoutProps } from "@/types/layout";
-import type { AuthUser } from "@/types/user";
 
-const navItemClass =
-  "w-full justify-start text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground";
-const activeNavItemClass =
-  "bg-sidebar-primary text-sidebar-primary-foreground shadow-sm hover:bg-sidebar-primary hover:text-sidebar-primary-foreground";
+/** Cookie written by the shadcn/ui SidebarProvider. */
+const SIDEBAR_COOKIE = "sidebar_state";
 
 export function AppLayout({ children }: AppLayoutProps) {
-  const { pathname } = useRouter();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [authUser, setAuthUser] = useState<AuthUser | null>(null);
-  const { enabled: realtimeEnabled, notifications } = useRealtime();
-  const { t } = useTranslation();
+  // Pages are static, so the saved state is applied after mount.
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    const persistedUser = localStorage.getItem("auth_user");
-    if (!persistedUser) {
-      setAuthUser(null);
-      return;
-    }
-
-    try {
-      setAuthUser(JSON.parse(persistedUser) as AuthUser);
-    } catch {
-      setAuthUser(null);
+    if (document.cookie.split("; ").includes(`${SIDEBAR_COOKIE}=false`)) {
+      setSidebarOpen(false);
     }
   }, []);
 
-  const displayName = authUser?.name?.trim() || t("layout.defaultUserName");
-  const displayEmail = authUser?.email || t("layout.noEmail");
-  const avatarFallback = displayName
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((namePart) => namePart[0]?.toUpperCase() ?? "")
-    .join("");
-
   return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 border-b border-border bg-card">
-        <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center space-x-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="lg:hidden"
-              aria-label={t("layout.toggleMenu")}
-            >
-              <Menu className="h-5 w-5" />
-            </Button>
-
-            <Link
-              href="/dashboard"
-              className="flex items-center space-x-2"
-              aria-label={t("common.appName")}
-            >
-              <div className="rounded-lg bg-primary p-2">
-                <Calendar className="h-6 w-6 text-primary-foreground" />
-              </div>
-              <span className="hidden text-xl font-bold text-foreground sm:inline">
-                {t("common.appName")}
-              </span>
-            </Link>
-          </div>
-
-          <div className="flex items-center space-x-2 sm:space-x-4">
-            <LanguageSwitcher />
-            <Button
-              variant="ghost"
-              size="sm"
-              className="relative"
-              aria-label={t("layout.notifications")}
-            >
-              <Bell className="h-5 w-5" />
-              {realtimeEnabled ? (
-                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-xs text-destructive-foreground">
-                  {notifications.length}
-                </span>
-              ) : null}
-            </Button>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="relative h-8 w-8 rounded-full"
-                  aria-label={t("layout.userMenu")}
-                >
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage
-                      src="/placeholder.svg?height=32&width=32"
-                      alt={displayName}
-                    />
-                    <AvatarFallback className="bg-secondary font-semibold text-secondary-foreground">
-                      {avatarFallback || "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">
-                      {displayName}
-                    </p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                      {displayEmail}
-                    </p>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <User className="mr-2 h-4 w-4" />
-                  <span>{t("layout.profile")}</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>{t("layout.settings")}</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => handleUnauthorizedRedirect("/")}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>{t("layout.logout")}</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-      </header>
-
-      <div className="flex">
-        <aside
-          className={`fixed z-40 min-h-screen w-64 border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-transform duration-300 lg:static lg:translate-x-0 ${
-            sidebarOpen ? "translate-x-0" : "-translate-x-full"
-          }`}
-        >
-          <nav className="space-y-2 p-4">
-            {[
-              {
-                href: "/dashboard",
-                label: t("common.dashboard"),
-                icon: LayoutDashboard,
-              },
-              {
-                href: "/dashboard/bookings",
-                label: t("layout.nav.bookings"),
-                icon: Calendar,
-              },
-            ].map(({ href, label, icon: Icon }) => {
-              const active = pathname === href;
-              return (
-                <Button
-                  key={href}
-                  variant="ghost"
-                  className={cn(navItemClass, active && activeNavItemClass)}
-                  asChild
-                >
-                  <Link
-                    href={href}
-                    aria-current={active ? "page" : undefined}
-                    onClick={() => setSidebarOpen(false)}
-                  >
-                    <Icon className="mr-2 h-4 w-4" />
-                    {label}
-                  </Link>
-                </Button>
-              );
-            })}
-            <Button variant="ghost" className={navItemClass}>
-              <Users className="mr-2 h-4 w-4" />
-              {t("layout.nav.customers")}
-            </Button>
-            <Button variant="ghost" className={navItemClass}>
-              <Settings className="mr-2 h-4 w-4" />
-              {t("layout.nav.services")}
-            </Button>
-            <Button variant="ghost" className={navItemClass}>
-              <BarChart3 className="mr-2 h-4 w-4" />
-              {t("layout.nav.reports")}
-            </Button>
-            <Button variant="ghost" className={navItemClass}>
-              <Settings className="mr-2 h-4 w-4" />
-              {t("layout.nav.settings")}
-            </Button>
-          </nav>
-        </aside>
-
-        <main className="flex-1">{children}</main>
+    <SidebarProvider
+      open={sidebarOpen}
+      onOpenChange={setSidebarOpen}
+      className="flex-col [--header-height:4rem]"
+    >
+      <AppHeader />
+      <div className="flex flex-1">
+        <AppSidebar />
+        <SidebarInset className="min-w-0">{children}</SidebarInset>
       </div>
-
-      {sidebarOpen ? (
-        <div
-          className="fixed inset-0 z-30 bg-black/50 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      ) : null}
-    </div>
+    </SidebarProvider>
   );
 }
 
