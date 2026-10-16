@@ -28,7 +28,7 @@ export function RegisterForm({
   const { t, tm } = useTranslation();
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center p-4">
+    <div className="relative min-h-screen bg-gradient-to-br from-primary/15 via-background to-secondary/20 flex items-center justify-center p-4">
       <LanguageSwitcher className="absolute right-4 top-4" />
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
@@ -65,7 +65,7 @@ export function RegisterForm({
                   />
                 </div>
                 {errors.name && (
-                  <p className="text-red-500 text-sm mt-1">
+                  <p className="text-destructive text-sm mt-1">
                     {tm(errors.name.message)}
                   </p>
                 )}
@@ -83,7 +83,7 @@ export function RegisterForm({
                   />
                 </div>
                 {errors.email && (
-                  <p className="text-red-500 text-sm mt-1">
+                  <p className="text-destructive text-sm mt-1">
                     {tm(errors.email.message)}
                   </p>
                 )}
@@ -118,7 +118,7 @@ export function RegisterForm({
                   </button>
                 </div>
                 {errors.password && (
-                  <p className="text-red-500 text-sm mt-1">
+                  <p className="text-destructive text-sm mt-1">
                     {tm(errors.password.message)}
                   </p>
                 )}
@@ -155,7 +155,7 @@ export function RegisterForm({
                   </button>
                 </div>
                 {errors.confirmPassword && (
-                  <p className="text-red-500 text-sm mt-1">
+                  <p className="text-destructive text-sm mt-1">
                     {tm(errors.confirmPassword.message)}
                   </p>
                 )}
@@ -170,7 +170,7 @@ export function RegisterForm({
               </Button>
 
               {errors.root?.message && (
-                <p className="text-red-500 text-sm mt-1">
+                <p className="text-destructive text-sm mt-1">
                   {tm(errors.root.message)}
                 </p>
               )}

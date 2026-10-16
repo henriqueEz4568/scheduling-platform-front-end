@@ -50,7 +50,8 @@ const es: Messages = {
     error: "No se pudo crear la cuenta.",
   },
   layout: {
-    toggleMenu: "Abrir menú",
+    openMenu: "Abrir menú",
+    closeMenu: "Cerrar menú",
     notifications: "Notificaciones",
     userMenu: "Menú de usuario",
     defaultUserName: "Usuario",
@@ -60,10 +61,6 @@ const es: Messages = {
     logout: "Cerrar sesión",
     nav: {
       bookings: "Reservas",
-      customers: "Clientes",
-      services: "Servicios",
-      reports: "Informes",
-      settings: "Configuración",
     },
   },
   dashboard: {
@@ -88,12 +85,7 @@ const es: Messages = {
     refunded: "Reembolsado",
   },
   bookings: {
-    section: "Reservas",
-    title: "Lista de reservas",
-    description: "Sigue las reservas devueltas por la API.",
-    newAppointment: "Nueva reserva",
-    cardTitle: "Reservas",
-    cardDescription: "Página {page} con hasta {limit} registros por consulta.",
+    title: "Reservas",
     loading: "Cargando reservas...",
     loadError: "No se pudieron cargar las reservas.",
     columns: {

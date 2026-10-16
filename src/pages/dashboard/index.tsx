@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/status-badge";
 import { getAppLayout } from "@/components/app-layout";
 import {
   FileText,
@@ -108,7 +108,7 @@ const upcomingAppointments = [
 
 export default function DashboardPage() {
   const [authUser, setAuthUser] = useState<AuthUser | null>(null);
-  const { t, tm } = useTranslation();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -129,19 +129,6 @@ export default function DashboardPage() {
   }, []);
 
   const displayName = authUser?.name?.trim() || t("layout.defaultUserName");
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "confirmed":
-        return "bg-green-100 text-green-800";
-      case "in-progress":
-        return "bg-blue-100 text-blue-800";
-      case "pending":
-        return "bg-yellow-100 text-yellow-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -186,8 +173,8 @@ export default function DashboardPage() {
                     </Link>
                   </Button>
                   <Button
-                    variant="outline"
-                    className="flex items-center space-x-2 bg-transparent"
+                    variant="secondary"
+                    className="flex items-center space-x-2"
                     asChild
                   >
                     <Link href="/dashboard/new-service">
@@ -229,7 +216,7 @@ export default function DashboardPage() {
                       {todaysSchedule.map((appointment) => (
                         <div
                           key={appointment.id}
-                          className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors"
+                          className="flex flex-wrap items-center justify-between gap-2 p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors"
                         >
                           <div className="flex items-center space-x-4">
                             <div className="text-sm font-medium text-muted-foreground min-w-[80px]">
@@ -244,14 +231,10 @@ export default function DashboardPage() {
                               </div>
                             </div>
                           </div>
-                          <Badge
-                            className={`${getStatusColor(
-                              appointment.status
-                            )} flex items-center space-x-1`}
-                          >
-                            {getStatusIcon(appointment.status)}
-                            <span>{tm(`status.${appointment.status}`)}</span>
-                          </Badge>
+                          <StatusBadge
+                            status={appointment.status}
+                            icon={getStatusIcon(appointment.status)}
+                          />
                         </div>
                       ))}
                     </div>

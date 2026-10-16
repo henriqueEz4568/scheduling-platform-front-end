@@ -103,7 +103,7 @@ export default function NewServicePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-slate-950/5 to-muted py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-secondary/10 py-12 px-4">
       <div className="max-w-6xl mx-auto space-y-10">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="space-y-3 text-center lg:text-left flex-1 min-w-[250px]">
