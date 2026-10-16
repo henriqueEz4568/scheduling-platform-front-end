@@ -1,18 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import { CalendarDays, Plus } from "lucide-react";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Table } from "@/components/table";
 import { getAppLayout } from "@/components/app-layout";
 import { StatusBadge } from "@/components/status-badge";
@@ -135,39 +126,12 @@ export default function BookingsPage() {
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="mx-auto max-w-7xl space-y-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <div className="mb-2 flex items-center gap-2 text-sm text-muted-foreground">
-              <CalendarDays className="h-4 w-4" />
-              {t("bookings.section")}
-            </div>
-            <h1 className="text-3xl font-bold text-foreground">
-              {t("bookings.title")}
-            </h1>
-            <p className="text-muted-foreground">{t("bookings.description")}</p>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" asChild>
-              <Link href="/dashboard">{t("common.dashboard")}</Link>
-            </Button>
-            <Button asChild>
-              <Link href="/dashboard/new-appointment">
-                <Plus className="h-4 w-4" />
-                {t("bookings.newAppointment")}
-              </Link>
-            </Button>
-          </div>
-        </div>
+        <h1 className="text-3xl font-bold text-foreground">
+          {t("bookings.title")}
+        </h1>
 
         <Card>
-          <CardHeader>
-            <CardTitle>{t("bookings.cardTitle")}</CardTitle>
-            <CardDescription>
-              {t("bookings.cardDescription", { page: currentPage, limit })}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-4 pt-6">
             {error ? (
               <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>
