@@ -126,6 +126,34 @@ fictícios" aparece no rodapé.
 Os dados ficam em `globalThis.__mockDb`, compartilhados entre as rotas e
 preservados no hot reload. Reiniciar o servidor volta aos valores iniciais.
 
+## Cores (primary e secondary)
+
+A paleta inteira sai de quatro variáveis no topo de `src/styles/globals.css`
+(cores em OKLCH):
+
+```css
+:root {
+  --brand-primary-hue: 275;      /* índigo */
+  --brand-primary-chroma: 0.2;
+  --brand-secondary-hue: 185;    /* verde-azulado */
+  --brand-secondary-chroma: 0.12;
+}
+```
+
+- **hue** (0–360): ≈ 25 vermelho, 70 laranja, 145 verde, 185 verde-azulado,
+  250 azul, 275 índigo, 330 rosa.
+- **chroma** (0–0.25): 0 é cinza, ≈ 0.2 é vivo.
+
+Todos os tokens (fundo levemente tingido, bordas, sidebar escura, foco,
+cabeçalho de tabela, gráficos e o modo escuro em `.dark`) são derivados
+dessas variáveis. Use sempre as classes dos tokens (`bg-primary`,
+`text-secondary-foreground`, `bg-sidebar`, `text-destructive`...) em vez de
+cores fixas como `bg-blue-500` ou `#hex`.
+
+Status de agendamento e pagamento usam o componente `StatusBadge`, que mapeia
+o status para as variantes `success`, `warning`, `info`, `danger` ou `neutral`
+(`src/lib/status.ts`).
+
 ## Idiomas (i18n)
 
 A interface está em **português (pt-BR)**, **inglês (en)** e **espanhol (es)**,
